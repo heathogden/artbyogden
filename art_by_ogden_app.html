@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Art by Ogden — Booth App</title>
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --fg: #1a2a1a;
+    --ink2: #4a4a4a;
+    --ink3: #8a8a8a;
+    --card: #ffffff;
+    --primary: #3D5C3F;
+    --primary-light: #4A6741;
+    --accent: #B5651D;
+    --muted: #888;
+    --border: #d8d2c2;
+    --border-soft: #ede9de;
+    --sold-out: #d4d4d4;
+    --low-stock: #FFF3CD;
+    --green: #2c8c3e;
+    --green-light: #e8f0eb;
+    --red: #c43d3d;
+    --red-light: #faeee9;
+    --blue: #2e5e8a;
+    --blue-light: #e8f0f7;
+    --gold: #b87d2e;
+    --gold-light: #faf0e0;
+    --purple: #5c3d6e;
+    --purple-light: #f0eaf5;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; height:100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--fg); overscroll-behavior: contain; }
+  body { display:flex; flex-direction:column; min-height:100vh; }
+
+  /* === APP HEADER (sticky shell wrapping topbar + tab-nav) === */
+  .app-header {
+    position: sticky; top: 0; z-index: 30;
+    background: white;
+    box-shadow: var(--shadow);
+  }
+
+  /* === TOP BAR === */
+  .topbar {
+    background: var(--primary); color: white;
+    padding: 6px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { font-size: 12px; opacity: 0.9; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
+  .practice-toggle { background: rgba(255,255,255,0.18); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; touch-action: manipulation; min-height: 44px; font-family: inherit; }
+  body.practice .topbar { background: #b8870a; }
+  body.practice .practice-toggle { background: white; color: #b8870a; }
+  .practice-banner { background: repeating-linear-gradient(45deg, #ffd966, #ffd966 12px, #ffe599 12px, #ffe599 24px); color: #5c3d00; font-size: 13px; font-weight: 700; text-align: center; padding: 6px 12px; border-bottom: 2px solid #b8870a; letter-spacing: 0.3px; display: none; }
+  body.practice .practice-banner { display: block; }
+
+  /* === TAB NAV === */
+  .tab-nav {
+    display: flex; gap: 0; background: white;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-link {
+    flex-shrink: 0;
+    padding: 12px 18px;
+    font-size: 13px; font-weight: 600;
+    color: var(--ink3);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    position: relative;
+  }
+  .tab-link:hover { color: var(--fg); }
+  .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-link .cart-badge {
+    background: var(--accent); color: white;
+    font-size: 10px; font-weight: 700;
+    border-radius: 10px; padding: 1px 7px;
+    margin-left: 6px;
+    display: none;
+  }
+  .tab-link .cart-badge.show { display: inline-block; }
+
+  /* === PANELS === */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* === TRACKER PANEL (POS) === */
+  .pos-cart {
+    background: var(--primary); color: white;
+    padding: 8px 12px;
+    box-shadow: var(--shadow);
+  }
+  body.practice .pos-cart { background: #b8870a; }
+  .cart-row { display:flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .cart-totals { font-size: 22px; font-weight: 700; line-height: 1; }
+  .cart-count { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+  .undo-btn {
+    background: rgba(255,255,255,0.15); color: white; border: none;
+    padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .undo-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .undo-btn:not(:disabled):active { background: rgba(255,255,255,0.3); }
+  .cart-items {
+    background: var(--primary-light); color: white;
+    max-height: 100px; overflow-y: auto;
+    padding: 4px 12px;
+    font-size: 13px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  body.practice .cart-items { background: #d4a425; }
+  .cart-items.empty { display: none; }
+  .cart-line { display:flex; justify-content: space-between; padding: 4px 0; cursor: pointer; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+  .cart-line:active { background: rgba(255,255,255,0.08); }
+  .cart-line .name { flex:1; }
+  .cart-line .qty { opacity: 0.75; margin: 0 8px; }
+  .cart-line .price { font-weight: 600; }
+  .cart-line .edited-badge { font-size: 10px; background: var(--accent); color: white; padding: 1px 5px; border-radius: 8px; margin-right: 6px; vertical-align: middle; }
+  .cart-line .edit-icon { opacity: 0.6; margin-left: 4px; font-size: 11px; }
+
+  .checkout-bar { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 6px; padding: 8px 12px; background: white; border-bottom: 1px solid var(--border); }
+  .pay-btn {
+    padding: 14px 8px; border-radius: 8px; border: none;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    color: white; transition: opacity 0.15s, transform 0.1s;
+  }
+  .pay-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pay-btn:not(:disabled):active { transform: scale(0.97); }
+  .pay-cash { background: #2c8c3e; }
+  .pay-venmo { background: #008CFF; }
+  .pay-card { background: #555; }
+  .void-btn {
+    padding: 14px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: white; color: var(--red); font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  .cat-tabs {
+    display: flex; gap: 4px; padding: 8px 12px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    background: white; border-bottom: 1px solid var(--border);
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    flex-shrink: 0; padding: 8px 14px; border-radius: 18px;
+    border: 1px solid var(--border); background: white;
+    font-size: 14px; font-weight: 600; color: var(--fg);
+    cursor: pointer; white-space: nowrap;
+    font-family: inherit;
+  }
+  .cat-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .pos-main { padding: 8px; padding-bottom: 80px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .product {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 10px; min-height: 90px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    cursor: pointer; box-shadow: var(--shadow);
+    transition: transform 0.08s, background 0.15s;
+    text-align: left;
+    font-family: inherit;
+  }
+  .product:active:not(.disabled) { transform: scale(0.97); background: #f0ede3; }
+  .product.disabled { opacity: 0.5; cursor: not-allowed; background: var(--sold-out); }
+  .product.low-stock { background: var(--low-stock); }
+  .product .name { font-size: 13px; font-weight: 600; line-height: 1.2; margin-bottom: 4px; }
+  .product .price { font-size: 20px; font-weight: 700; color: var(--primary); }
+  .product .stock { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .product .stock.empty { color: var(--red); font-weight: 600; }
+
+  .pos-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--border); padding: 8px 12px; display: none; gap: 6px; z-index: 8; }
+  body.tracker-active .pos-footer { display: flex; }
+  .footer-btn { flex:1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: white; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .footer-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .product.custom-tile { background: #faf3e0; border: 2px dashed var(--accent); }
+  .product.custom-tile .name { color: var(--accent); }
+  .product.custom-tile .price { color: var(--accent); }
+
+  /* === GENERIC PANEL CONTAINER === */
+  .panel-body { padding: 16px; max-width: 880px; margin: 0 auto; padding-bottom: 60px; }
+
+  /* === CARDS === */
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .card-actions .card-title { margin: 0; }
+
+  /* === METRICS === */
+  .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+  @media (min-width: 700px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
+  .metric { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .metric-label { font-size: 11px; color: var(--ink3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 700; line-height: 1; }
+  .mv-green { color: var(--primary); }
+  .mv-gold { color: var(--gold); }
+  .mv-blue { color: var(--blue); }
+  .mv-red { color: var(--red); }
+
+  /* === FORMS === */
+  .form-grid { display: grid; gap: 10px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    .form-row3 { grid-template-columns: 1fr 1fr; }
+  }
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .lbl { font-size: 12px; color: var(--ink3); font-weight: 500; }
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: white;
+    color: var(--fg);
+    width: 100%;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
+  /* === BUTTONS === */
+  .btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--fg);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .btn:hover { background: var(--border-soft); }
+  .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-danger { background: white; color: var(--red); border-color: var(--red); }
+  .btn-sm { font-size: 12px; padding: 5px 10px; border-radius: 6px; }
+
+  /* === TABLES === */
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-soft); color: var(--ink3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; background: #fafafa; position: sticky; top: 0; }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .gh td { background: var(--border-soft); font-size: 11px; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.07em; padding: 5px 10px; }
+  .dimmed { opacity: 0.5; }
+
+  .inv-input { font-size: 13px !important; padding: 4px 6px !important; border-radius: 5px !important; min-width: 60px; }
+  .inv-input.num { text-align: right; max-width: 80px; }
+  .inv-input.price { max-width: 90px; }
+  .inv-input.notes { font-size: 12px !important; }
+
+  /* === BADGES === */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .b-amber { background: var(--gold-light); color: var(--gold); }
+  .b-blue { background: var(--blue-light); color: var(--blue); }
+  .b-green { background: var(--green-light); color: var(--primary); }
+  .b-purple { background: var(--purple-light); color: var(--purple); }
+  .b-red { background: var(--red-light); color: var(--red); }
+  .b-gray { background: var(--border-soft); color: var(--ink3); }
+
+  /* === STATUS === */
+  .st-ok { color: var(--primary); font-weight: 600; font-size: 11px; }
+  .st-restock { color: var(--gold); font-weight: 600; font-size: 11px; }
+  .st-sold-out { color: var(--red); font-weight: 700; font-size: 11px; }
+
+  /* === INFO BARS === */
+  .info-bar { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+  .info-green { background: var(--green-light); color: var(--primary); border-left: 3px solid var(--primary); }
+  .info-blue { background: var(--blue-light); color: var(--blue); border-left: 3px solid var(--blue); }
+  .info-gold { background: var(--gold-light); color: var(--gold); border-left: 3px solid var(--gold); }
+
+  /* === PRICE SHEET === */
+  .ps-note { font-size: 12px; color: var(--ink3); font-style: italic; margin-bottom: 10px; }
+  .ps-table td:nth-child(2) { font-weight: 700; color: var(--primary); white-space: nowrap; }
+  .ps-table td:nth-child(3) { color: var(--ink3); font-size: 12px; }
+
+  /* === CHECKLIST === */
+  .ck-group { margin-bottom: 18px; }
+  .ck-group-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .ck-group-name { font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ck-count { font-size: 11px; color: var(--ink3); }
+  .ck-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+  .ck-item:last-child { border-bottom: none; }
+  .ck-item input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
+  .ck-content { flex: 1; cursor: pointer; }
+  .ck-title { font-size: 14px; font-weight: 500; }
+  .ck-note { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+  .ck-done .ck-title { text-decoration: line-through; color: var(--ink3); }
+  .prog-wrap { height: 7px; background: var(--border-soft); border-radius: 4px; overflow: hidden; margin-top: 6px; margin-bottom: 16px; }
+  .prog-fill { height: 100%; border-radius: 4px; background: var(--primary); transition: width 0.4s; }
+
+  /* === BUSINESS PLAN ROWS === */
+  .prow { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: 14px; }
+  .prow:last-child { border-bottom: none; }
+  .prow-label { color: var(--ink2); }
+  .prow-val { font-weight: 600; }
+
+  /* === MODALS === */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .modal-bg.show { display: flex; }
+  .modal { background: white; border-radius: 14px; max-width: 420px; width: 100%; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.2); max-height: 85vh; overflow-y: auto; }
+  .modal h2 { margin: 0 0 4px 0; font-size: 18px; }
+  .modal .sub { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+  .addon-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .addon-btn { padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: white; font-size: 15px; font-weight: 600; text-align: left; cursor: pointer; font-family: inherit; }
+  .addon-btn:active { background: #eee; }
+  .addon-btn .price-tag { float: right; color: var(--primary); }
+  .modal-cancel { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: white; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .edit-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .edit-field label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .edit-field input[type=number] { font-size: 24px; font-weight: 700; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; width: 100%; -moz-appearance: textfield; }
+  .edit-field input[type=number]::-webkit-outer-spin-button, .edit-field input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .edit-field input[type=number]:focus { outline: none; border-color: var(--primary); }
+  .qty-row { display: flex; align-items: center; gap: 8px; }
+  .qty-btn { width: 44px; height: 44px; border-radius: 8px; border: 2px solid var(--border); background: white; font-size: 22px; font-weight: 700; cursor: pointer; }
+  .qty-btn:active { background: #eee; }
+  .qty-display { font-size: 24px; font-weight: 700; min-width: 40px; text-align: center; }
+  .edit-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .edit-save { padding: 14px; border-radius: 8px; border: none; background: var(--primary); color: white; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .edit-remove { padding: 14px; border-radius: 8px; border: 1px solid var(--red); background: white; color: var(--red); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .price-hint { font-size: 12px; color: var(--muted); margin-top: -8px; margin-bottom: 12px; }
+  .quick-discount { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; }
+  .quick-discount button { padding: 8px 4px; border: 1px solid var(--border); background: white; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .quick-discount button:active { background: #eee; }
+
+  /* === DAY SUMMARY === */
+  .summary-pane { padding: 16px; }
+  .summary-pane h3 { margin: 0 0 6px 0; }
+  .summary-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .summary-stat .label { color: var(--muted); }
+  .summary-stat .val { font-weight: 700; }
+  .summary-list { font-size: 13px; max-height: 240px; overflow-y: auto; margin-top: 8px; padding: 8px; background: #faf8f3; border-radius: 8px; }
+
+  /* === TOAST === */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 10px 18px; border-radius: 24px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 200; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+
+  .empty { text-align: center; padding: 2rem; color: var(--ink3); font-size: 13px; }
+
+  @media (min-width: 700px) {
+    .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+    .product { min-height: 110px; }
+    .product .price { font-size: 22px; }
+  }
+</style>
+</head>
+<body class="tracker-active">
+
+<div class="practice-banner">⚠ PRACTICE MODE — sales not recorded, inventory frozen</div>
+
+<div class="app-header">
+  <div class="topbar">
+    <div class="brand">Art by Ogden · Booth App</div>
+    <button class="practice-toggle" id="practice-toggle">Practice: OFF</button>
+  </div>
+
+  <nav class="tab-nav" id="tab-nav">
+    <button class="tab-link active" data-tab="tracker">Tracker<span class="cart-badge" id="cart-badge">0</span></button>
+    <button class="tab-link" data-tab="inventory">Inventory</button>
+    <button class="tab-link" data-tab="prices">Price Sheet</button>
+    <button class="tab-link" data-tab="checklist">Checklist</button>
+    <button class="tab-link" data-tab="plan">Business Plan</button>
+  </nav>
+</div>
+
+<!-- ════ TRACKER PANEL ════ -->
+<div class="panel active" id="panel-tracker">
+  <div class="pos-cart">
+    <div class="cart-row">
+      <div>
+        <div class="cart-totals" id="cart-total">$0.00</div>
+        <div class="cart-count" id="cart-count">empty cart</div>
+      </div>
+      <button class="undo-btn" id="undo-btn" disabled>↶ Undo</button>
+    </div>
+    <div class="cart-items empty" id="cart-items"></div>
+  </div>
+
+  <div class="checkout-bar">
+    <button class="pay-btn pay-cash" id="pay-cash" disabled>Cash</button>
+    <button class="pay-btn pay-venmo" id="pay-venmo" disabled>Venmo</button>
+    <button class="pay-btn pay-card" id="pay-card" disabled>Card</button>
+    <button class="void-btn" id="void-btn">Void</button>
+  </div>
+
+  <nav class="cat-tabs" id="cat-tabs"></nav>
+
+  <main class="pos-main">
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<!-- ════ INVENTORY PANEL ════ -->
+<div class="panel" id="panel-inventory">
+  <div class="panel-body">
+    <div class="metrics" id="inv-metrics"></div>
+
+    <div class="card">
+      <div class="card-actions">
+        <span class="card-title">All inventory</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="inv-filter" style="width:auto;font-size:12px;padding:5px 26px 5px 8px">
+            <option value="">All types</option>
+            <option value="Original">Originals</option>
+            <option value="Print">Prints</option>
+            <option value="Card">Cards</option>
+            <option value="Sticker">Stickers</option>
+            <option value="Mug">Mugs</option>
+            <option value="Journal">Journals</option>
+            <option value="Book">Books</option>
+            <option value="Merch">Merch</option>
+            <option value="Commission">Commission</option>
+          </select>
+          <button class="btn btn-sm" id="inv-export-csv">Export CSV</button>
+          <button class="btn btn-sm" id="inv-export-json">Export JSON</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table style="min-width:780px">
+          <thead>
+            <tr>
+              <th style="width:22%">Item</th>
+              <th style="width:9%">Type</th>
+              <th style="width:8%">Price</th>
+              <th style="width:8%">Cost</th>
+              <th style="width:8%">On Hand</th>
+              <th style="width:8%">Reorder At</th>
+              <th style="width:9%">Status</th>
+              <th style="width:10%">Vendor</th>
+              <th style="width:14%">Notes</th>
+              <th style="width:4%"></th>
+            </tr>
+          </thead>
+          <tbody id="inv-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Add new SKU</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="fg"><span class="lbl">Item name</span><input id="add-name" placeholder="e.g. Sticker — emerald wasp"></div>
+          <div class="fg"><span class="lbl">Type</span>
+            <select id="add-type">
+              <option value="Original">Original</option>
+              <option value="Print">Print</option>
+              <option value="Card">Card</option>
+              <option value="Sticker" selected>Sticker</option>
+              <option value="Mug">Mug</option>
+              <option value="Journal">Journal</option>
+              <option value="Book">Book</option>
+              <option value="Merch">Merch</option>
+              <option value="Commission">Commission</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row3">
+          <div class="fg"><span class="lbl">Price ($, tax-incl)</span><input id="add-price" type="number" min="0" step="1" placeholder="0"></div>
+          <div class="fg"><span class="lbl">Unit cost ($)</span><input id="add-cost" type="number" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><span class="lbl">On hand</span><input id="add-qty" type="number" min="0" step="1" value="0"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><span class="lbl">Reorder at</span><input id="add-reorder" type="number" min="0" step="1" value="0"></div>
+          <div class="fg"><span class="lbl">Vendor</span><input id="add-vendor" placeholder="e.g. Stickr"></div>
+        </div>
+        <div class="fg"><span class="lbl">Notes</span><input id="add-notes" placeholder="optional context"></div>
+        <button class="btn btn-primary" id="add-sku-btn">Add SKU</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-actions">
+        <span class="card-title">Movements log</span>
+        <div style="display:flex;gap:8px">
+          <select id="mv-filter" style="width:auto;font-size:12px;padding:5px 26px 5px 8px">
+            <option value="">All types</option>
+            <option value="Sale">Sales</option>
+            <option value="Restock Ordered">Restock Ordered</option>
+            <option value="Restock Received">Restock Received</option>
+            <option value="Manual Adjust">Manual Adjust</option>
+            <option value="Add SKU">Add SKU</option>
+            <option value="Remove SKU">Remove SKU</option>
+          </select>
+          <button class="btn btn-sm" id="mv-add-btn">+ Manual entry</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table style="min-width:680px">
+          <thead>
+            <tr>
+              <th style="width:14%">Date · Time</th>
+              <th style="width:14%">Type</th>
+              <th style="width:24%">Item</th>
+              <th style="width:8%">Δ Qty</th>
+              <th style="width:32%">Reason</th>
+              <th style="width:8%"></th>
+            </tr>
+          </thead>
+          <tbody id="mv-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PRICE SHEET PANEL ════ -->
+<div class="panel" id="panel-prices">
+  <div class="panel-body">
+    <div class="info-bar info-blue">All prices tax-inclusive. Add-ons applied at point of sale: matt &lt;10" +$15 · matt 10"+ +$20 · frame +$50.</div>
+    <div id="ps-body"></div>
+  </div>
+</div>
+
+<!-- ════ CHECKLIST PANEL ════ -->
+<div class="panel" id="panel-checklist">
+  <div class="panel-body">
+    <div class="info-bar info-green">Pre-event prep checklist. Persists across sessions. Reset before the next event.</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:13px;color:var(--ink3)"><span id="ck-done">0</span> of <span id="ck-tot">0</span> ready</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" id="ck-all">Check all</button>
+        <button class="btn btn-sm" id="ck-reset">Reset</button>
+      </div>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill" id="ck-bar" style="width:0%"></div></div>
+    <div id="ck-body"></div>
+  </div>
+</div>
+
+<!-- ════ BUSINESS PLAN PANEL ════ -->
+<div class="panel" id="panel-plan">
+  <div class="panel-body">
+    <div class="card">
+      <div class="card-title">Art by Ogden LLC</div>
+      <p style="font-size:13px;color:var(--ink2);line-height:1.7">Watercolor artwork by Heath Ogden — entomologist, professor and department chair (UVU). Insect-themed watercolor originals, prints, cards, mugs, stickers, journals, magnets, and a self-published hardcover art book (<em>The Orders</em>). Part-time alongside full-time job; intentionally a small first step toward retirement.</p>
+      <div class="prow"><span class="prow-label">EIN</span><span class="prow-val">39-3675146</span></div>
+      <div class="prow"><span class="prow-label">Instagram</span><span class="prow-val">@artbyogden</span></div>
+      <div class="prow"><span class="prow-label">Sales tax (Orem, Utah County)</span><span class="prow-val">7.65%</span></div>
+      <div class="prow"><span class="prow-label">Payment methods</span><span class="prow-val">Venmo · Cash · Card (Square)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Today's break-even tracker</div>
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:10px">Live from today's sales (Tracker tab). Enter event-day costs to compute profit.</p>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="fg"><span class="lbl">Booth + application fee ($)</span><input id="pe-booth" type="number" value="0" min="0" step="1"></div>
+        <div class="fg"><span class="lbl">Other costs ($)</span><input id="pe-other" type="number" value="0" min="0" step="1"></div>
+      </div>
+      <div id="plan-d"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tax notes</div>
+      <p style="font-size:13px;color:var(--ink2);line-height:1.6">Prices are tax-inclusive at the booth. Tax to remit is back-calculated as <code>gross × rate / (1 + rate)</code>. Current rate: <strong>7.65%</strong> (Orem, Utah County). Change <code>TAX_RATE</code> at the top of the script if you sell in a different city — e.g., West Jordan was 7.45%. The Day Summary in the Tracker tab shows the back-calculated tax to remit at the current rate.</p>
+      <p style="font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.6">Tax collected is not income — it must be remitted to the Utah State Tax Commission. Bank statement is the source of truth for payment-method totals; use it (not the Tracker) to reconcile after the event.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Commission pricing</div>
+      <div class="prow"><span class="prow-label">9x6 commission (established rate)</span><span class="prow-val mv-green">$75</span></div>
+      <div class="prow"><span class="prow-label">Deposit at event (50%)</span><span class="prow-val">$37.50</span></div>
+      <div class="prow"><span class="prow-label">Balance on delivery</span><span class="prow-val">$37.50</span></div>
+      <p style="font-size:12px;color:var(--ink3);margin-top:10px">Add commissions as a Custom item in the Tracker — note "commission deposit · balance $37.50 on delivery".</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Strategic decisions (locked)</div>
+      <ul style="font-size:13px;color:var(--ink2);line-height:1.7;padding-left:18px;margin:0">
+        <li><strong>Website:</strong> Etsy + Carrd at artbyogden.com + MailerLite (~$31/yr + Etsy fees). Target launch summer 2026.</li>
+        <li><strong>Event selection:</strong> bias toward fine-art audiences (juried shows, museum-adjacent fairs, university events). Pair with library/gallery exposure when possible.</li>
+        <li><strong>POS:</strong> Square Reader (~$49 hardware, 2.6% + 10¢/swipe) for cards. Tracker handles Venmo/cash; Square handles cards. Tax baked into prices.</li>
+        <li><strong>Pricing:</strong> originals priced per piece by complexity; everything else fixed list. A5 journal: $20.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- pos footer (visible on tracker tab only) -->
+<footer class="pos-footer">
+  <button class="footer-btn" id="undo-sale-btn" disabled>↶ Undo Sale</button>
+  <button class="footer-btn" id="summary-btn">Day Summary</button>
+  <button class="footer-btn primary" id="export-btn">Export CSV</button>
+  <button class="footer-btn" id="reset-btn">Reset Day</button>
+</footer>
+
+<!-- ════ MODALS ════ -->
+<div class="modal-bg" id="addon-modal">
+  <div class="modal">
+    <h2 id="addon-title">Add-on?</h2>
+    <div class="sub" id="addon-sub">Pick how the customer wants this.</div>
+    <div class="addon-options" id="addon-options"></div>
+    <button class="modal-cancel" onclick="closeModal('addon-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="custom-modal">
+  <div class="modal">
+    <h2>Custom item</h2>
+    <div class="sub">For spur-of-the-moment sales or items not in inventory. Doesn't affect tracked stock.</div>
+    <div class="edit-field">
+      <label>Item name</label>
+      <input type="text" id="custom-name" style="font-size: 16px; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; width: 100%; font-family: inherit;" placeholder="e.g. Mystery print, Studio visit deposit">
+    </div>
+    <div class="edit-field">
+      <label>Price (tax-inclusive)</label>
+      <input type="number" inputmode="decimal" step="0.01" id="custom-price" placeholder="0.00">
+    </div>
+    <div class="edit-field">
+      <label>Category</label>
+      <select id="custom-type" style="font-size: 16px; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; width: 100%; font-family: inherit; background: white;">
+        <option value="Custom">Custom</option>
+        <option value="Original">Original</option>
+        <option value="Print">Print</option>
+        <option value="Card">Card</option>
+        <option value="Sticker">Sticker</option>
+        <option value="Mug">Mug</option>
+        <option value="Journal">Journal</option>
+        <option value="Book">Book</option>
+        <option value="Merch">Merch</option>
+        <option value="Commission">Commission</option>
+      </select>
+    </div>
+    <div class="edit-actions" style="grid-template-columns: 1fr;">
+      <button class="edit-save" id="custom-add">Add to cart</button>
+    </div>
+    <button class="modal-cancel" style="margin-top: 8px;" onclick="closeModal('custom-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <h2 id="edit-title">Edit line</h2>
+    <div class="sub" id="edit-sub"></div>
+    <div class="edit-field">
+      <label>Unit price (what customer pays each)</label>
+      <input type="number" inputmode="decimal" step="0.01" id="edit-price">
+      <div class="price-hint" id="edit-price-hint"></div>
+      <div class="quick-discount">
+        <button data-pct="0">List</button>
+        <button data-pct="10">−10%</button>
+        <button data-pct="20">−20%</button>
+        <button data-pct="50">−50%</button>
+      </div>
+    </div>
+    <div class="edit-field">
+      <label>Quantity</label>
+      <div class="qty-row">
+        <button class="qty-btn" id="edit-qty-minus">−</button>
+        <div class="qty-display" id="edit-qty-display">1</div>
+        <button class="qty-btn" id="edit-qty-plus">+</button>
+      </div>
+    </div>
+    <div class="edit-actions">
+      <button class="edit-remove" id="edit-remove">Remove</button>
+      <button class="edit-save" id="edit-save">Save</button>
+    </div>
+    <button class="modal-cancel" style="margin-top: 8px;" onclick="closeModal('edit-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <h2 id="confirm-title">Confirm?</h2>
+    <div class="sub" id="confirm-sub"></div>
+    <div class="addon-options">
+      <button class="addon-btn" id="confirm-yes" style="background: var(--primary); color: white;">Yes</button>
+    </div>
+    <button class="modal-cancel" onclick="closeModal('confirm-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="summary-modal">
+  <div class="modal summary-pane">
+    <h2>Today's Summary</h2>
+    <div class="sub" id="summary-date"></div>
+    <div id="summary-stats"></div>
+    <h3 style="margin-top: 14px;">Sales</h3>
+    <div class="summary-list" id="summary-list"></div>
+    <button class="modal-cancel" style="margin-top: 12px;" onclick="closeModal('summary-modal')">Close</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="manual-mv-modal">
+  <div class="modal">
+    <h2>Manual movement entry</h2>
+    <div class="sub">Log a restock, adjustment, or correction. Updates On Hand automatically.</div>
+    <div class="edit-field">
+      <label>Item</label>
+      <select id="mv-sku" style="font-size:15px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;width:100%;font-family:inherit;background:white"></select>
+    </div>
+    <div class="edit-field">
+      <label>Type</label>
+      <select id="mv-type" style="font-size:15px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;width:100%;font-family:inherit;background:white">
+        <option value="Restock Ordered">Restock Ordered (no qty change)</option>
+        <option value="Restock Received">Restock Received (+ to On Hand)</option>
+        <option value="Manual Adjust">Manual Adjust (+/- to On Hand)</option>
+      </select>
+    </div>
+    <div class="edit-field">
+      <label>Qty change (use negative for reductions)</label>
+      <input type="number" inputmode="numeric" step="1" id="mv-qty" value="0">
+    </div>
+    <div class="edit-field">
+      <label>Reason / reference</label>
+      <input type="text" id="mv-reason" placeholder="e.g. Persnickety order #43292899" style="font-size:15px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;width:100%;font-family:inherit">
+    </div>
+    <div class="edit-actions">
+      <button class="modal-cancel" onclick="closeModal('manual-mv-modal')">Cancel</button>
+      <button class="edit-save" id="mv-save-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   ART BY OGDEN — COMBINED BOOTH APP
+   - Single localStorage namespace
+   - Tracker (POS), Inventory (editor + Movements log), Price Sheet, Checklist, Business Plan
+   - Tax-INCLUSIVE prices
+   ============================================================ */
+
+const TAX_RATE = 0.0765;  // Orem, Utah County combined rate (was 0.0745 for West Jordan).
+const STORAGE_KEY = 'artbyogden_app_v3';
+
+/* ---------- Inventory baseline (post-Art-in-the-Park, May 2 2026) ---------- */
+/* Source of truth: Master_Inventory.xlsx · update before each event */
+const INVENTORY_SEED = [
+  // Originals — per-piece pricing, set on each new piece
+  { sku: 'orig-4x6',         name: 'Original 4x6',           type: 'Original',   price: 25,  cost: null,  qty: 5,   reorderAt: 1,  vendor: 'Heath',                       notes: 'Per-piece pricing. Counted 2026-05-09 at 6; -1 sold at Orem 5/13.', addons: ['matt-sm','frame'] },
+  { sku: 'orig-5x7',         name: 'Original 5x7',           type: 'Original',   price: 40,  cost: null,  qty: 0,   reorderAt: 1,  vendor: 'Heath',                       notes: 'Per-piece pricing. Counted 2026-05-09.', addons: ['matt-sm','frame'] },
+  { sku: 'orig-9x6',         name: 'Original 9x6',           type: 'Original',   price: 50,  cost: null,  qty: 20,  reorderAt: 1,  vendor: 'Heath',                       notes: 'Commissions $75 · ~1.5hr fast pieces. Counted 2026-05-09.', addons: ['matt-sm','frame'] },
+  { sku: 'orig-9x12',        name: 'Original 9x12',          type: 'Original',   price: 100, cost: null,  qty: 28,  reorderAt: 2,  vendor: 'Heath',                       notes: 'Counted 2026-05-09 at 30. -1 to Brianna Jones 5/12. -1 sold $80 at Orem 5/13. Now 28.', addons: ['matt-lg','frame'] },
+  // Prints
+  { sku: 'print-4x6',        name: 'Print 4x6',              type: 'Print',      price: 8,   cost: 2.54,  qty: 89,  reorderAt: 30, vendor: 'Persnickety+Mpix',            notes: '0/90 sold May 2 (large dead inventory). 1 sold $5 at Orem 5/13.', addons: ['matt-sm','frame'] },
+  { sku: 'print-5x7',        name: 'Print 5x7',              type: 'Print',      price: 10,  cost: 2.54,  qty: 54,  reorderAt: 20, vendor: 'Persnickety+GicleeToday+Mpix', notes: '2/62 sold May 2. 6 sold at Orem 5/13.', addons: ['matt-sm','frame'] },
+  { sku: 'print-8x10',       name: 'Print 8x10',             type: 'Print',      price: 20,  cost: 3.79,  qty: 14,  reorderAt: 5,  vendor: 'Persnickety',                 notes: '1/15 sold May 2.', addons: ['matt-sm','frame'] },
+  { sku: 'print-11x14p',     name: 'Print 11x14 premium',    type: 'Print',      price: 80,  cost: 29.99, qty: 5,   reorderAt: 2,  vendor: 'Printkeg',                    notes: '0/5 sold May 2. Take orders if interest.', addons: ['matt-lg','frame'] },
+  { sku: 'giclee-11x14',     name: 'Giclee 11x14 — Mantodea',type: 'Print',      price: 128, cost: 31.99, qty: 1,   reorderAt: 1,  vendor: 'Persnickety',                 notes: 'Statement piece.', addons: ['matt-lg','frame'] },
+  { sku: 'giclee-16x20',     name: 'Giclee 16x20 — anchor',  type: 'Print',      price: 168, cost: 41.99, qty: 1,   reorderAt: 1,  vendor: 'Persnickety',                 notes: 'Anchor display piece.', addons: ['matt-lg','frame'] },
+  // Cards
+  { sku: 'card-folded',      name: 'Greeting card 5x7',      type: 'Card',       price: 5,   cost: 1.31,  qty: 49,  reorderAt: 20, vendor: 'Printkeg',                    notes: '0/50 sold May 2. 1 sold $7 at Orem 5/13 (above list).' },
+  { sku: 'card-mini-pack',   name: 'Mini card pack (5)',     type: 'Card',       price: 15,  cost: 6.50,  qty: 22,  reorderAt: 8,  vendor: 'Printkeg',                    notes: '2/20 sold May 2. Recounted + restocked 5/9 (24). 2 sold at Orem 5/13.' },
+  // Stickers — CONSOLIDATED 2026-05-13 (was 7 SKUs, simplified to 2 tiles)
+  // Heath tracks individual sticker design counts off-app; the system tracks the aggregate pool only.
+  { sku: 'sticker',          name: 'Sticker',                type: 'Sticker',    price: 3,   cost: 1.10,  qty: 50,  reorderAt: 15, vendor: 'Stickr',                      notes: 'Consolidated SKU for all sticker designs. Math-sum post-May-13: 0 red + 8 dark + 10 blue + 9 monarch + 9 swallow + 9 pineapple + 5 orchid = 50 (red beetle count TBD).' },
+  { sku: 'sticker-bundle-2', name: 'Stickers 2 for $5',      type: 'Sticker',    price: 5,   cost: null,  qty: null,reorderAt: null, vendor: 'Stickr',                    notes: 'Bundle SKU: $5 for any 2 stickers. Decrements 2 from the "Sticker" pool per sale.', bundleOf: 'sticker', bundleQty: 2 },
+  // Mugs
+  { sku: 'mug-11oz',         name: 'Mug 11oz',               type: 'Mug',        price: 20,  cost: 7.66,  qty: 8,   reorderAt: 4,  vendor: 'CanvasChamp',                 notes: '3/12 sold May 2. 1 sold $15 (discounted) at Orem 5/13.' },
+  // Journals
+  { sku: 'journal-a6',       name: 'Journal A6',             type: 'Journal',    price: 15,  cost: 7.49,  qty: 8,   reorderAt: 4,  vendor: 'Persnickety',                 notes: '0/8 sold May 2.' },
+  { sku: 'journal-a5',       name: 'Journal A5',             type: 'Journal',    price: 20,  cost: 10.49, qty: 13,  reorderAt: 4,  vendor: 'Persnickety',                 notes: '1/11 sold May 2. Was $21 → $20. Persnickety order #43292899 received 2026-05-11 (+3).' },
+  { sku: 'journal-field',    name: 'Field journal',          type: 'Journal',    price: 15,  cost: 7.65,  qty: 9,   reorderAt: 2,  vendor: 'Persnickety',                 notes: '0/3 sold May 2. Persnickety order #43292899 received 2026-05-11 (+6).' },
+  // Book
+  { sku: 'book-the-orders',  name: 'The Orders (book)',      type: 'Book',       price: 30,  cost: 8.665, qty: 185, reorderAt: 30, vendor: 'QinPrinting',                 notes: '2nd printing 200 copies. -3 May 2, -4 May 5 workshop, -1 Orem 5/13. Now 185.' },
+  // Merch
+  { sku: 'magnet',           name: 'Magnet',                 type: 'Merch',      price: 10,  cost: 5,     qty: 10,  reorderAt: 4,  vendor: 'Heath',                       notes: 'Mixed: 6 free (art show) + 4 from Persnickety #43292899. Price raised $5 → $10 on 2026-05-12 to cover $5/unit marginal cost. 50% margin.' },
+  // Commission (not in tracker tile, tracked here only)
+  { sku: 'commission-9x6',   name: 'Commission 9x6',         type: 'Commission', price: 75,  cost: null,  qty: null,reorderAt: null, vendor: 'Heath',                     notes: '50% deposit at event · balance $37.50 on delivery.' },
+];
+
+const ADDONS = {
+  'matt-sm': { name: 'Matt small',   price: 15 },
+  'matt-lg': { name: 'Matt large',   price: 20 },
+  'frame':   { name: 'Frame',        price: 50 },
+};
+
+const CATEGORIES = ['All','Original','Print','Card','Sticker','Mug','Journal','Book','Merch'];
+const TC = {Original:'b-amber',Print:'b-blue',Card:'b-green',Sticker:'b-purple',Mug:'b-green',Journal:'b-gray',Book:'b-blue',Merch:'b-red',Commission:'b-amber',Custom:'b-gray'};
+
+/* ---- Bundle SKU helpers ----
+   A SKU with `bundleOf` field draws its inventory from another SKU's pool,
+   consuming `bundleQty` units per sale. Used for the "Stickers 2 for $5" tile.
+*/
+function inventorySkuFor(prod) { return (prod && prod.bundleOf) || (prod && prod.sku); }
+function unitsPerSaleFor(prod) { return (prod && prod.bundleQty) || 1; }
+
+/* ---------- Default checklist ---------- */
+const CK_DEFAULT = [
+  {cat:'Booth & shelter',items:[
+    {t:'Pop-up tent / canopy',n:'Required by event'},
+    {t:'Leg weights (40 lb each)',n:'Wind coverage — required at most events'},
+    {t:'Folding table(s)',n:'For display and transactions'},
+    {t:'Folding chair',n:'Multi-hour event'},
+    {t:'Tablecloth(s)',n:'Nicer ones preferred'},
+    {t:'Rug / ground cover',n:'Defines booth space, looks inviting'},
+  ]},
+  {cat:'Art & display',items:[
+    {t:'Prints into protective sleeves',n:'Do night before'},
+    {t:'Price tags on every piece',n:'Use Price Sheet tab as guide'},
+    {t:'Price signs made',n:'Stickers $3 · Cards $5/$15 · Prints $8–$168'},
+    {t:'Mesh walls / panels / easels',n:'For hanging prints and originals'},
+    {t:'Originals — framed and ready',n:'Frames secure, glass clean'},
+    {t:'Portfolio / presentation book',n:'For customers to flip through'},
+    {t:'Display hooks / clips / zip ties',n:'For hanging on mesh walls'},
+    {t:'Business cards',n:'@artbyogden, email, Venmo QR'},
+    {t:'Venmo QR code printed (2–3 copies)',n:'Faster than username lookup'},
+    {t:'"Art by Ogden" signage',n:'Readable from a distance'},
+  ]},
+  {cat:'Payments & admin',items:[
+    {t:'Sales tax form completed',n:'File before each event'},
+    {t:'$100 in small bills for change',n:'Mix of $1s, $5s, $10s, $20s'},
+    {t:'Cash lockbox or fanny pack',n:'Keep cash secure'},
+    {t:'Square Reader paired with phone',n:'Card processing'},
+    {t:'This app open on phone',n:'Tracker tab before doors open'},
+    {t:'EIN accessible if needed',n:'EIN: 39-3675146'},
+  ]},
+  {cat:'Weather & comfort',items:[
+    {t:'Sunscreen',n:'Outdoor events'},
+    {t:'Hat / sunglasses',n:'Sun protection'},
+    {t:'Water bottle',n:'Hydration'},
+    {t:'Snacks / lunch plan',n:'Multi-hour event'},
+    {t:'Light jacket or layer',n:'Breeze can feel cooler'},
+    {t:'Light tarp (just in case)',n:'Rain backup'},
+  ]},
+  {cat:'Transport & day-of logistics',items:[
+    {t:'Folding cart / hand truck',n:'Unload window — essential'},
+    {t:'Reusable bins / bags',n:'Protect inventory in transit'},
+    {t:'Pack car the night before',n:'Use this checklist as you load'},
+    {t:'Arrive in assigned window',n:'Check event-specific entrance/parking'},
+    {t:'Check in at booth',n:'Required at most events'},
+  ]},
+  {cat:'Miscellaneous',items:[
+    {t:'Power bank / phone charger',n:'Full battery all day'},
+    {t:'Pens, tape, scissors',n:'Quick fixes and labeling'},
+    {t:'Hand sanitizer & wipes',n:'Cash handling, etc.'},
+    {t:'Trash bags',n:'Keep booth tidy'},
+    {t:'Booth setup photos for social',n:'Tag event hashtag'},
+  ]},
+];
+
+/* ---------- State ---------- */
+let state = {
+  date: todayStr(),
+  inv: {},               // sku -> on hand
+  inventory: null,       // editable copy of INVENTORY_SEED (with overrides)
+  cart: [],
+  sales: [],
+  movements: [],         // { id, date, time, sku, type, qtyChange, reason }
+  checklist: {},         // key -> bool
+  plan: { booth: 0, other: 0 },
+  // practice
+  practiceMode: false,
+  practiceInv: {},
+  practiceCart: [],
+  practiceSales: [],
+};
+loadState();
+if (state.date !== todayStr()) {
+  // New day — keep inventory + movements; reset cart and sales
+  state.cart = [];
+  state.sales = [];
+  state.date = todayStr();
+  saveState();
+}
+
+/* ---------- Practice-aware accessors ---------- */
+const _cart  = () => state.practiceMode ? state.practiceCart  : state.cart;
+const _sales = () => state.practiceMode ? state.practiceSales : state.sales;
+const _inv   = () => state.practiceMode ? state.practiceInv   : state.inv;
+function _setCart(arr)  { if (state.practiceMode) state.practiceCart  = arr; else state.cart  = arr; }
+function _setSales(arr) { if (state.practiceMode) state.practiceSales = arr; else state.sales = arr; }
+
+/* ---------- Helpers ---------- */
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function nowTimeStr() { const d = new Date(); return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+function money(n) { return '$' + Number(n||0).toFixed(2); }
+function uid() { return Math.random().toString(36).slice(2,10); }
+
+function loadState() {
+  let isFreshSeed = false;
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) state = Object.assign(state, JSON.parse(s)); } catch (e) {}
+  // Initialize editable inventory copy if absent
+  if (!state.inventory || !Array.isArray(state.inventory) || state.inventory.length === 0) {
+    state.inventory = JSON.parse(JSON.stringify(INVENTORY_SEED));
+    isFreshSeed = true;
+  }
+  // One-shot migrations: fix the May 9 typo'd mini-pack name if still present
+  state.inventory.forEach(p => {
+    if (p.sku === 'card-mini-pack' && p.name === 'Mini cards - 5 pack pack (5)') {
+      p.name = 'Mini card pack (5)';
+    }
+  });
+  // Ensure inv map covers every SKU in current state.inventory
+  state.inventory.forEach(p => {
+    if (state.inv[p.sku] == null) state.inv[p.sku] = (p.qty == null ? 0 : p.qty);
+    if (state.practiceInv[p.sku] == null) state.practiceInv[p.sku] = (p.qty == null ? 0 : p.qty);
+  });
+  // Backfill defaults
+  if (!state.movements) state.movements = [];
+  if (!state.checklist) state.checklist = {};
+  if (!state.plan) state.plan = { booth: 0, other: 0 };
+  if (!state.migrations) state.migrations = {};
+
+  // ---- One-shot data migration: Persnickety order #43292899 receipt (2026-05-11) ----
+  // For users whose localStorage predates the May 11 pickup, bump A5+3, Field+6, Magnet+4
+  // and log Restock Received movements. Skipped (no-op) for fresh-seed users (seed already
+  // reflects post-receipt totals) and for users who already logged the receipt manually.
+  if (!state.migrations.persnicketyReceipt_43292899) {
+    const alreadyLogged = state.movements.some(m =>
+      m.type === 'Restock Received' && m.reason && m.reason.indexOf('#43292899') !== -1
+    );
+    if (isFreshSeed) {
+      state.migrations.persnicketyReceipt_43292899 = 'skipped-fresh';
+    } else if (alreadyLogged) {
+      state.migrations.persnicketyReceipt_43292899 = 'skipped-already-logged';
+    } else {
+      const bumps = [
+        ['journal-a5',    3, 'Persnickety order #43292899 received 2026-05-11 (auto-applied on app reload) — A5 journals'],
+        ['journal-field', 6, 'Persnickety order #43292899 received 2026-05-11 (auto-applied on app reload) — Field journals'],
+        ['magnet',        4, 'Persnickety Photo Magnets set of 4 received 2026-05-11 (auto-applied on app reload) — order #43292899'],
+      ];
+      bumps.forEach(function(b) {
+        var sku = b[0], qty = b[1], reason = b[2];
+        state.inv[sku] = (state.inv[sku] || 0) + qty;
+        if (state.practiceInv[sku] != null) state.practiceInv[sku] = (state.practiceInv[sku] || 0) + qty;
+        state.movements.push({
+          id: Math.random().toString(36).slice(2, 10),
+          date: '2026-05-11', time: '6:00 PM',
+          sku: sku, type: 'Restock Received', qtyChange: qty, reason: reason
+        });
+      });
+      state.migrations.persnicketyReceipt_43292899 = 'applied';
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  // ---- One-shot migration: Consolidate stickers to 1 SKU + 1 bundle (2026-05-13) ----
+  // Sums old per-design sticker inv into a single 'sticker' SKU, removes the 7 individual
+  // sticker SKUs from state.inventory, adds the new 'sticker' and 'sticker-bundle-2' SKUs.
+  // Idempotent via flag; safe for fresh-seed (those already have the new layout).
+  if (!state.migrations.stickerConsolidation_20260513) {
+    const OLD_STICKER_SKUS = ['sticker-red','sticker-dark','sticker-blue','sticker-monarch','sticker-swallow','sticker-pine','sticker-orchid'];
+    const hasOldSkus = state.inventory.some(p => OLD_STICKER_SKUS.indexOf(p.sku) !== -1);
+    if (isFreshSeed) {
+      state.migrations.stickerConsolidation_20260513 = 'skipped-fresh';
+    } else if (!hasOldSkus) {
+      state.migrations.stickerConsolidation_20260513 = 'skipped-already-consolidated';
+    } else {
+      // Sum existing sticker counts into 'sticker'
+      let realTotal = 0, practiceTotal = 0;
+      OLD_STICKER_SKUS.forEach(function(s) {
+        if (state.inv[s] != null) realTotal += state.inv[s];
+        if (state.practiceInv[s] != null) practiceTotal += state.practiceInv[s];
+        delete state.inv[s];
+        delete state.practiceInv[s];
+      });
+      state.inv['sticker'] = realTotal;
+      state.practiceInv['sticker'] = practiceTotal;
+      // Remove old sticker SKUs from inventory
+      state.inventory = state.inventory.filter(function(p) { return OLD_STICKER_SKUS.indexOf(p.sku) === -1; });
+      // Add consolidated SKU if not present
+      if (!state.inventory.find(function(p){return p.sku === 'sticker';})) {
+        state.inventory.push({
+          sku: 'sticker', name: 'Sticker', type: 'Sticker',
+          price: 3, cost: 1.10, qty: realTotal, reorderAt: 15, vendor: 'Stickr',
+          notes: 'Consolidated SKU for all sticker designs (auto-migrated 2026-05-13). Individual variant counts now tracked off-app.'
+        });
+      }
+      // Add bundle SKU if not present
+      if (!state.inventory.find(function(p){return p.sku === 'sticker-bundle-2';})) {
+        state.inventory.push({
+          sku: 'sticker-bundle-2', name: 'Stickers 2 for $5', type: 'Sticker',
+          price: 5, cost: null, qty: null, reorderAt: null, vendor: 'Stickr',
+          notes: 'Bundle: $5 for 2 stickers. Decrements 2 from the "Sticker" pool per sale.',
+          bundleOf: 'sticker', bundleQty: 2
+        });
+      }
+      state.movements.push({
+        id: Math.random().toString(36).slice(2, 10),
+        date: '2026-05-13', time: '11:00 PM',
+        sku: 'sticker', type: 'Manual Adjust', qtyChange: 0,
+        reason: 'Sticker consolidation: 7 individual SKUs merged into 1 pool with total ' + realTotal + '. Bundle SKU "Stickers 2 for $5" added.'
+      });
+      state.migrations.stickerConsolidation_20260513 = 'applied';
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  // ---- One-shot data migration: Workshop sale 4× The Orders (2026-05-05) ----
+  // Decrements book-the-orders by 4 and logs a Sale movement. Skipped for fresh-seed users
+  // (seed already at post-sale qty) and idempotent via the flag.
+  if (!state.migrations.workshopBookSale_20260505) {
+    const alreadyLogged = state.movements.some(m =>
+      m.type === 'Sale' && m.sku === 'book-the-orders' && m.reason && m.reason.indexOf('Workshop') !== -1
+    );
+    if (isFreshSeed) {
+      state.migrations.workshopBookSale_20260505 = 'skipped-fresh';
+    } else if (alreadyLogged) {
+      state.migrations.workshopBookSale_20260505 = 'skipped-already-logged';
+    } else {
+      state.inv['book-the-orders'] = Math.max(0, (state.inv['book-the-orders'] || 0) - 4);
+      if (state.practiceInv['book-the-orders'] != null) {
+        state.practiceInv['book-the-orders'] = Math.max(0, (state.practiceInv['book-the-orders'] || 0) - 4);
+      }
+      state.movements.push({
+        id: Math.random().toString(36).slice(2, 10),
+        date: '2026-05-05', time: '7:00 PM',
+        sku: 'book-the-orders', type: 'Sale', qtyChange: -4,
+        reason: 'Workshop sale (UT) — 4 × The Orders @ $30 = $120 Venmo (tax-incl). Recorded in Direct_Sales_2026.xlsx (row 6).'
+      });
+      state.migrations.workshopBookSale_20260505 = 'applied';
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  // ---- One-shot data migration: Direct sale to Brianna Jones (2026-05-12) ----
+  // Decrements orig-9x12 by 1 and logs a Sale movement. Skipped for fresh-seed users
+  // (seed already at post-sale qty) and for users who already logged it. Idempotent.
+  if (!state.migrations.briannaJones_blueDeathBeetle_20260512) {
+    const alreadyLogged = state.movements.some(m =>
+      m.type === 'Sale' && m.sku === 'orig-9x12' && m.reason && m.reason.indexOf('Brianna') !== -1
+    );
+    if (isFreshSeed) {
+      state.migrations.briannaJones_blueDeathBeetle_20260512 = 'skipped-fresh';
+    } else if (alreadyLogged) {
+      state.migrations.briannaJones_blueDeathBeetle_20260512 = 'skipped-already-logged';
+    } else {
+      state.inv['orig-9x12'] = Math.max(0, (state.inv['orig-9x12'] || 0) - 1);
+      if (state.practiceInv['orig-9x12'] != null) {
+        state.practiceInv['orig-9x12'] = Math.max(0, (state.practiceInv['orig-9x12'] || 0) - 1);
+      }
+      state.movements.push({
+        id: Math.random().toString(36).slice(2, 10),
+        date: '2026-05-12', time: '8:00 PM',
+        sku: 'orig-9x12', type: 'Sale', qtyChange: -1,
+        reason: 'Direct/commission sale to Brianna Jones (UT) — Blue Death Feigned Beetle 9x12 — Venmo $36 tax-incl — postage $2.72. Recorded in Direct_Sales_2026.xlsx (Sales Log row 5).'
+      });
+      state.migrations.briannaJones_blueDeathBeetle_20260512 = 'applied';
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  // ---- One-shot data migration: Magnet price/cost change (2026-05-12) ----
+  // Bump Magnet price $5 → $10 and cost $0 → $5 to cover marginal cost from Persnickety order.
+  // Skipped for fresh-seed users (seed already at new values). Idempotent via migration flag.
+  if (!state.migrations.magnetPrice_2026_05_12) {
+    const magnet = state.inventory.find(p => p.sku === 'magnet');
+    if (isFreshSeed) {
+      state.migrations.magnetPrice_2026_05_12 = 'skipped-fresh';
+    } else if (magnet && magnet.price === 10 && magnet.cost === 5) {
+      state.migrations.magnetPrice_2026_05_12 = 'skipped-already-applied';
+    } else if (magnet) {
+      magnet.price = 10;
+      magnet.cost = 5;
+      state.movements.push({
+        id: Math.random().toString(36).slice(2, 10),
+        date: '2026-05-12', time: '6:30 PM',
+        sku: 'magnet', type: 'Price Change', qtyChange: 0,
+        reason: 'Price $5 → $10 and cost $0 → $5 (auto-applied on app reload). Reflects $5/unit marginal cost from Persnickety set. 50% margin going forward.'
+      });
+      state.migrations.magnetPrice_2026_05_12 = 'applied';
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+}
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+function logMovement(sku, type, qtyChange, reason) {
+  // Don't log practice movements
+  if (state.practiceMode) return;
+  state.movements.push({
+    id: uid(),
+    date: todayStr(),
+    time: nowTimeStr(),
+    sku,
+    type,
+    qtyChange,
+    reason: reason || ''
+  });
+}
+
+function findProduct(sku) { return state.inventory.find(p => p.sku === sku); }
+
+/* ============================================================
+   TAB NAV
+   ============================================================ */
+function activateTab(name) {
+  document.querySelectorAll('.tab-link').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  document.body.classList.toggle('tracker-active', name === 'tracker');
+  if (name === 'inventory') renderInventory();
+  if (name === 'prices') renderPrices();
+  if (name === 'checklist') renderChecklist();
+  if (name === 'plan') renderPlan();
+}
+document.getElementById('tab-nav').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab-link');
+  if (btn) activateTab(btn.dataset.tab);
+});
+
+/* ============================================================
+   TRACKER (POS) — same UX as v2
+   ============================================================ */
+function addToCart(sku, addonIds = []) {
+  const prod = findProduct(sku);
+  if (!prod) return;
+  const inv = _inv();
+  const invSku = inventorySkuFor(prod);
+  const ups = unitsPerSaleFor(prod);
+  if ((inv[invSku] || 0) < ups) { toast('Out of stock'); return; }
+  const addonPrice = addonIds.reduce((sum, id) => sum + (ADDONS[id]?.price || 0), 0);
+  const suggestedUnitPrice = prod.price + addonPrice;
+  const unitPrice = suggestedUnitPrice;
+  const addonLabel = addonIds.map(id => ADDONS[id].name).join(' + ');
+  const displayName = addonLabel ? `${prod.name} + ${addonLabel}` : prod.name;
+  const cart = _cart();
+  const existing = cart.find(l =>
+    l.sku === sku &&
+    JSON.stringify(l.addons) === JSON.stringify(addonIds) &&
+    l.unitPrice === l.suggestedUnitPrice
+  );
+  if (existing) {
+    // Adding one more would require (existing.qty + 1) * ups units total
+    if ((inv[invSku] || 0) < (existing.qty + 1) * ups) { toast('Not enough stock'); return; }
+    existing.qty += 1;
+  } else {
+    cart.push({ sku, name: prod.name, displayName, type: prod.type, basePrice: prod.price, addons: addonIds, suggestedUnitPrice, unitPrice, qty: 1, custom: false });
+  }
+  saveState(); render(); toast(`Added ${displayName}`);
+}
+function addCustomItem(name, price, type) {
+  const cart = _cart();
+  const cleanName = (name || 'Custom item').trim() || 'Custom item';
+  cart.push({
+    sku: '__custom__', name: cleanName, displayName: cleanName, type: type || 'Custom',
+    basePrice: price, addons: [], suggestedUnitPrice: price, unitPrice: price, qty: 1,
+    custom: true
+  });
+  saveState(); render(); toast(`Added ${cleanName}`);
+}
+function undoLast() {
+  const cart = _cart();
+  if (cart.length === 0) return;
+  const last = cart[cart.length - 1];
+  if (last.qty > 1) last.qty -= 1; else cart.pop();
+  saveState(); render(); toast('Removed');
+}
+function voidCart() {
+  const cart = _cart();
+  if (cart.length === 0) return;
+  confirmAction('Void cart?', `Clear all ${cart.length} item line(s) without recording a sale?`, () => {
+    _setCart([]); saveState(); render(); toast('Cart cleared');
+  });
+}
+function checkout(method) {
+  const cart = _cart();
+  const sales = _sales();
+  const inv = _inv();
+  if (cart.length === 0) return;
+  const items = JSON.parse(JSON.stringify(cart));
+  const total = items.reduce((s, l) => s + l.unitPrice * l.qty, 0);
+  const tax = +(total * TAX_RATE / (1 + TAX_RATE)).toFixed(2);
+  const net = +(total - tax).toFixed(2);
+  const sale = {
+    n: sales.length + 1,
+    time: nowTimeStr(),
+    items, total: +total.toFixed(2), tax, net, method,
+    practice: state.practiceMode
+  };
+  sales.push(sale);
+  items.forEach(l => {
+    if (l.custom || l.sku === '__custom__') return;
+    const prod = findProduct(l.sku);
+    const invSku = inventorySkuFor(prod);
+    const ups = unitsPerSaleFor(prod);
+    const unitsOut = l.qty * ups;
+    inv[invSku] = Math.max(0, (inv[invSku] || 0) - unitsOut);
+    const bundleSuffix = prod && prod.bundleOf ? ` [${prod.name} bundle, -${ups}/sale]` : '';
+    logMovement(invSku, 'Sale', -unitsOut, `Sale #${sale.n} (${method})${bundleSuffix}`);
+  });
+  _setCart([]); saveState(); render();
+  toast(`${state.practiceMode ? '[Practice] ' : ''}Sale #${sale.n} · ${money(total)} · ${method}`);
+}
+
+function confirmAction(title, sub, onYes) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-sub').textContent = sub;
+  const yes = document.getElementById('confirm-yes');
+  yes.onclick = () => { closeModal('confirm-modal'); onYes(); };
+  openModal('confirm-modal');
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function openAddonModal(prod) {
+  document.getElementById('addon-title').textContent = prod.name;
+  document.getElementById('addon-sub').textContent = `Base ${money(prod.price)}. Pick how the customer wants it.`;
+  const opts = document.getElementById('addon-options');
+  opts.innerHTML = '';
+  const justBtn = document.createElement('button');
+  justBtn.className = 'addon-btn';
+  justBtn.innerHTML = `Just the ${prod.name.toLowerCase()} <span class="price-tag">${money(prod.price)}</span>`;
+  justBtn.onclick = () => { closeModal('addon-modal'); addToCart(prod.sku, []); };
+  opts.appendChild(justBtn);
+  (prod.addons || []).forEach(id => {
+    const a = ADDONS[id];
+    const b = document.createElement('button');
+    b.className = 'addon-btn';
+    b.innerHTML = `+ ${a.name} <span class="price-tag">${money(prod.price + a.price)}</span>`;
+    b.onclick = () => { closeModal('addon-modal'); addToCart(prod.sku, [id]); };
+    opts.appendChild(b);
+  });
+  if ((prod.addons || []).includes('matt-sm') && (prod.addons || []).includes('frame')) {
+    const b = document.createElement('button');
+    b.className = 'addon-btn';
+    const combo = ADDONS['matt-sm'].price + ADDONS['frame'].price;
+    b.innerHTML = `+ Matt small + Frame <span class="price-tag">${money(prod.price + combo)}</span>`;
+    b.onclick = () => { closeModal('addon-modal'); addToCart(prod.sku, ['matt-sm','frame']); };
+    opts.appendChild(b);
+  }
+  if ((prod.addons || []).includes('matt-lg') && (prod.addons || []).includes('frame')) {
+    const b = document.createElement('button');
+    b.className = 'addon-btn';
+    const combo = ADDONS['matt-lg'].price + ADDONS['frame'].price;
+    b.innerHTML = `+ Matt large + Frame <span class="price-tag">${money(prod.price + combo)}</span>`;
+    b.onclick = () => { closeModal('addon-modal'); addToCart(prod.sku, ['matt-lg','frame']); };
+    opts.appendChild(b);
+  }
+  openModal('addon-modal');
+}
+
+/* ---------- Tracker render ---------- */
+let activeCategory = 'All';
+function render() {
+  const cart = _cart();
+  const inv = _inv();
+
+  document.body.classList.toggle('practice', !!state.practiceMode);
+  document.getElementById('practice-toggle').textContent = `Practice: ${state.practiceMode ? 'ON' : 'OFF'}`;
+
+  const total = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
+  const itemCount = cart.reduce((s, l) => s + l.qty, 0);
+  document.getElementById('cart-total').textContent = money(total);
+  document.getElementById('cart-count').textContent = itemCount === 0 ? 'empty cart' : `${itemCount} item${itemCount === 1 ? '' : 's'} · tax-incl`;
+
+  // Cart badge on Tracker tab
+  const badge = document.getElementById('cart-badge');
+  badge.textContent = itemCount;
+  badge.classList.toggle('show', itemCount > 0);
+
+  const cartItems = document.getElementById('cart-items');
+  if (cart.length === 0) {
+    cartItems.classList.add('empty');
+    cartItems.innerHTML = '';
+  } else {
+    cartItems.classList.remove('empty');
+    cartItems.innerHTML = cart.map((l, i) => {
+      const edited = l.unitPrice !== l.suggestedUnitPrice;
+      const customMarker = l.custom ? '<span class="edited-badge" style="background: #555;">custom</span>' : '';
+      const editBadge = edited ? `<span class="edited-badge">${l.unitPrice < l.suggestedUnitPrice ? '−' : '+'}${money(Math.abs(l.unitPrice - l.suggestedUnitPrice))}</span>` : '';
+      return `<div class="cart-line" data-idx="${i}">
+        <span class="name">${customMarker}${editBadge}${l.displayName}<span class="edit-icon">✎</span></span>
+        <span class="qty">×${l.qty}</span>
+        <span class="price">${money(l.unitPrice * l.qty)}</span>
+      </div>`;
+    }).join('');
+    cartItems.querySelectorAll('.cart-line').forEach(el => {
+      el.onclick = () => openEditModal(parseInt(el.dataset.idx, 10));
+    });
+  }
+  document.getElementById('undo-btn').disabled = cart.length === 0;
+  ['pay-cash','pay-venmo','pay-card'].forEach(id => document.getElementById(id).disabled = cart.length === 0);
+  document.getElementById('undo-sale-btn').disabled = _sales().length === 0;
+
+  const tabs = document.getElementById('cat-tabs');
+  tabs.innerHTML = CATEGORIES.map(cat =>
+    `<button class="cat-tab ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}">${cat}</button>`
+  ).join('');
+  tabs.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.onclick = () => { activeCategory = btn.dataset.cat; render(); };
+  });
+
+  const grid = document.getElementById('grid');
+  const customTile = `<button class="product custom-tile" id="custom-tile">
+    <div>
+      <div class="name">+ Custom item</div>
+      <div class="price">$ ?</div>
+    </div>
+    <div class="stock">Anything not in inventory</div>
+  </button>`;
+  // Tracker only shows in-stock-trackable types — exclude Commission since it has null qty
+  const list = state.inventory.filter(p => {
+    if (p.type === 'Commission') return false;
+    if (activeCategory === 'All') return true;
+    return p.type === activeCategory;
+  });
+  grid.innerHTML = customTile + list.map(p => {
+    const invSku = inventorySkuFor(p);
+    const ups = unitsPerSaleFor(p);
+    const onHand = inv[invSku] || 0;
+    const available = Math.floor(onHand / ups);
+    const lowStock = available > 0 && available <= 2;
+    const empty = available <= 0;
+    const stockLabel = empty ? 'Sold out' : (ups > 1 ? available + ' bundles · ' + onHand + ' stickers' : available + ' left');
+    return `<button class="product ${empty ? 'disabled' : ''} ${lowStock ? 'low-stock' : ''}" data-sku="${p.sku}" ${empty ? 'disabled' : ''}>
+      <div>
+        <div class="name">${p.name}</div>
+        <div class="price">${money(p.price)}</div>
+      </div>
+      <div class="stock ${empty ? 'empty' : ''}">${stockLabel}${(p.addons || []).length ? ' · add-ons' : ''}</div>
+    </button>`;
+  }).join('');
+  document.getElementById('custom-tile').onclick = openCustomModal;
+  grid.querySelectorAll('.product[data-sku]').forEach(btn => {
+    btn.onclick = () => {
+      const sku = btn.dataset.sku;
+      const prod = findProduct(sku);
+      if (!prod) return;
+      if ((prod.addons || []).length > 0) openAddonModal(prod);
+      else addToCart(sku, []);
+    };
+  });
+}
+
+/* ---------- Custom item modal ---------- */
+function openCustomModal() {
+  document.getElementById('custom-name').value = '';
+  document.getElementById('custom-price').value = '';
+  document.getElementById('custom-type').value = 'Custom';
+  openModal('custom-modal');
+  setTimeout(() => document.getElementById('custom-name').focus(), 100);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('custom-add').onclick = () => {
+    const name = document.getElementById('custom-name').value.trim();
+    const priceStr = document.getElementById('custom-price').value;
+    const type = document.getElementById('custom-type').value;
+    const price = parseFloat(priceStr);
+    if (!name) { toast('Name required'); return; }
+    if (isNaN(price) || price < 0) { toast('Invalid price'); return; }
+    addCustomItem(name, +price.toFixed(2), type);
+    closeModal('custom-modal');
+  };
+});
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+/* ---------- Day summary ---------- */
+function showSummary() {
+  const sales = _sales();
+  document.getElementById('summary-date').textContent = `${state.date}${state.practiceMode ? ' · PRACTICE MODE' : ''}`;
+  const totalCust = sales.reduce((s, x) => s + x.total, 0);
+  const tax = sales.reduce((s, x) => s + x.tax, 0);
+  const net = sales.reduce((s, x) => s + x.net, 0);
+  const itemCount = sales.reduce((s, x) => s + x.items.reduce((y, l) => y + l.qty, 0), 0);
+  const cash = sales.filter(s => s.method === 'Cash').reduce((s,x) => s + x.total, 0);
+  const venmo = sales.filter(s => s.method === 'Venmo').reduce((s,x) => s + x.total, 0);
+  const card = sales.filter(s => s.method === 'Card').reduce((s,x) => s + x.total, 0);
+  document.getElementById('summary-stats').innerHTML = `
+    <div class="summary-stat"><span class="label">Sales recorded</span><span class="val">${sales.length}</span></div>
+    <div class="summary-stat"><span class="label">Items sold</span><span class="val">${itemCount}</span></div>
+    <div class="summary-stat"><span class="label">Customer paid (gross)</span><span class="val">${money(totalCust)}</span></div>
+    <div class="summary-stat"><span class="label">Tax to remit (back-calc)</span><span class="val">${money(tax)}</span></div>
+    <div class="summary-stat"><span class="label">Net revenue</span><span class="val">${money(net)}</span></div>
+    <div class="summary-stat"><span class="label">Cash</span><span class="val">${money(cash)}</span></div>
+    <div class="summary-stat"><span class="label">Venmo</span><span class="val">${money(venmo)}</span></div>
+    <div class="summary-stat"><span class="label">Card</span><span class="val">${money(card)}</span></div>
+  `;
+  const list = document.getElementById('summary-list');
+  if (sales.length === 0) {
+    list.innerHTML = '<div style="color: var(--muted);">No sales yet.</div>';
+  } else {
+    list.innerHTML = sales.slice().reverse().map(s =>
+      `<div style="border-bottom: 1px solid #eee; padding: 6px 0;">
+        <div><strong>#${s.n}</strong> · ${s.time} · ${money(s.total)} · ${s.method}</div>
+        <div style="color: var(--muted); font-size: 12px;">${s.items.map(i => `${i.displayName} ×${i.qty}`).join(', ')}</div>
+      </div>`
+    ).join('');
+  }
+  openModal('summary-modal');
+}
+
+/* ---------- CSV export (sales) ---------- */
+function exportCSV() {
+  const sales = _sales();
+  if (sales.length === 0) { toast('No sales to export'); return; }
+  if (state.practiceMode) { toast('Practice sales — not exported'); return; }
+  const rows = [['#','Time','Item','Type','Sign Price','Add-ons','Customer Paid /unit','Qty','Customer Paid','Tax to Remit (back-calc)','Net Revenue','Payment Method']];
+  sales.forEach(sale => {
+    sale.items.forEach(item => {
+      const addonLabel = item.addons.map(id => ADDONS[id].name).join(' + ') || '—';
+      const subtotal = +(item.unitPrice * item.qty).toFixed(2);
+      const lineTax = +(subtotal * TAX_RATE / (1 + TAX_RATE)).toFixed(2);
+      const lineNet = +(subtotal - lineTax).toFixed(2);
+      rows.push([sale.n, sale.time, item.name, item.type, item.basePrice, addonLabel, item.unitPrice, item.qty, subtotal, lineTax, lineNet, sale.method]);
+    });
+  });
+  downloadCSV(rows, `art_by_ogden_sales_${state.date}.csv`);
+  toast('CSV exported');
+}
+function downloadCSV(rows, name) {
+  const csv = rows.map(r => r.map(c => {
+    const s = String(c == null ? '' : c);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function resetDay() {
+  const sales = _sales();
+  const label = state.practiceMode ? 'Reset practice?' : 'Reset day?';
+  const sub = state.practiceMode
+    ? `Clear all ${sales.length} practice sale(s) and reset practice inventory to current real inventory?`
+    : `Clear all ${sales.length} recorded sale(s) and start fresh? Inventory and Movements are preserved. Export first if you want a copy.`;
+  confirmAction(label, sub, () => {
+    _setSales([]); _setCart([]);
+    if (state.practiceMode) {
+      state.practiceInv = JSON.parse(JSON.stringify(state.inv));
+    } else {
+      state.date = todayStr();
+    }
+    saveState(); render();
+    toast(state.practiceMode ? 'Practice reset' : 'Day reset');
+  });
+}
+
+function undoLastSale() {
+  const sales = _sales();
+  if (sales.length === 0) { toast('No sale to undo'); return; }
+  const cart = _cart();
+  const inv = _inv();
+  const lastSale = sales[sales.length - 1];
+  const restore = () => {
+    lastSale.items.forEach(l => {
+      if (l.custom || l.sku === '__custom__') return;
+      const prod = findProduct(l.sku);
+      const invSku = inventorySkuFor(prod);
+      const ups = unitsPerSaleFor(prod);
+      inv[invSku] = (inv[invSku] || 0) + l.qty * ups;
+    });
+    lastSale.items.forEach(l => cart.push(JSON.parse(JSON.stringify(l))));
+    sales.pop();
+    // Remove the matching Sale movements from the log
+    if (!state.practiceMode) {
+      state.movements = state.movements.filter(m => !(m.type === 'Sale' && m.reason && m.reason.includes(`Sale #${lastSale.n} `)));
+    }
+    saveState(); render(); toast(`Sale #${lastSale.n} restored to cart`);
+  };
+  if (cart.length > 0) {
+    confirmAction('Undo last sale?',
+      `Sale #${lastSale.n} (${money(lastSale.total)} · ${lastSale.method}) will be merged into your current cart of ${cart.length} line(s).`,
+      restore);
+  } else { restore(); }
+}
+
+function togglePractice() {
+  if (!state.practiceMode) {
+    state.practiceInv = JSON.parse(JSON.stringify(state.inv));
+    state.practiceCart = []; state.practiceSales = [];
+    state.practiceMode = true; toast('Practice mode ON');
+  } else {
+    state.practiceMode = false; toast('Practice mode OFF — back to real data');
+  }
+  saveState(); render();
+}
+
+/* ---------- Edit cart line modal ---------- */
+let editingIdx = null;
+function openEditModal(idx) {
+  const line = _cart()[idx];
+  if (!line) return;
+  editingIdx = idx;
+  document.getElementById('edit-title').textContent = line.displayName;
+  const sugg = line.suggestedUnitPrice;
+  document.getElementById('edit-sub').textContent = `List price ${money(sugg)} each. Edit anything below.`;
+  document.getElementById('edit-price').value = line.unitPrice.toFixed(2);
+  document.getElementById('edit-price-hint').textContent = `Tax-inclusive. ${line.unitPrice === sugg ? 'No discount yet.' : line.unitPrice < sugg ? `${money(sugg - line.unitPrice)} off list.` : `${money(line.unitPrice - sugg)} above list.`}`;
+  document.getElementById('edit-qty-display').textContent = String(line.qty);
+  document.querySelectorAll('.quick-discount button').forEach(b => {
+    b.onclick = () => {
+      const pct = parseInt(b.dataset.pct, 10);
+      const newPrice = +(sugg * (1 - pct / 100)).toFixed(2);
+      document.getElementById('edit-price').value = newPrice.toFixed(2);
+      document.getElementById('edit-price').dispatchEvent(new Event('input'));
+    };
+  });
+  document.getElementById('edit-price').oninput = (e) => {
+    const v = parseFloat(e.target.value || '0');
+    const hint = document.getElementById('edit-price-hint');
+    if (isNaN(v)) { hint.textContent = ''; return; }
+    if (v === sugg) hint.textContent = 'Tax-inclusive. No discount yet.';
+    else if (v < sugg) hint.textContent = `Tax-inclusive. ${money(sugg - v)} off list (${((sugg-v)/sugg*100).toFixed(0)}% discount).`;
+    else hint.textContent = `Tax-inclusive. ${money(v - sugg)} above list.`;
+  };
+  document.getElementById('edit-qty-minus').onclick = () => {
+    const d = document.getElementById('edit-qty-display');
+    const n = Math.max(1, parseInt(d.textContent, 10) - 1);
+    d.textContent = String(n);
+  };
+  document.getElementById('edit-qty-plus').onclick = () => {
+    const d = document.getElementById('edit-qty-display');
+    const n = parseInt(d.textContent, 10) + 1;
+    if (!line.custom) {
+      const prod = findProduct(line.sku);
+      const invSku = inventorySkuFor(prod);
+      const ups = unitsPerSaleFor(prod);
+      const onHand = _inv()[invSku] || 0;
+      // n bundles need n*ups units total; current line already holds line.qty*ups
+      if (n * ups > onHand + line.qty * ups) { toast('Not enough stock'); return; }
+    }
+    d.textContent = String(n);
+  };
+  openModal('edit-modal');
+}
+document.getElementById('edit-save').onclick = () => {
+  if (editingIdx === null) return;
+  const cart = _cart();
+  const line = cart[editingIdx];
+  const newPrice = parseFloat(document.getElementById('edit-price').value);
+  const newQty = parseInt(document.getElementById('edit-qty-display').textContent, 10);
+  if (isNaN(newPrice) || newPrice < 0) { toast('Invalid price'); return; }
+  if (isNaN(newQty) || newQty < 1) { toast('Invalid quantity'); return; }
+  line.unitPrice = +newPrice.toFixed(2);
+  line.qty = newQty;
+  saveState(); render(); closeModal('edit-modal'); toast('Line updated');
+  editingIdx = null;
+};
+document.getElementById('edit-remove').onclick = () => {
+  if (editingIdx === null) return;
+  _cart().splice(editingIdx, 1);
+  saveState(); render(); closeModal('edit-modal'); toast('Removed');
+  editingIdx = null;
+};
+
+/* ============================================================
+   INVENTORY PANEL
+   ============================================================ */
+function renderInventory() {
+  const filter = document.getElementById('inv-filter').value;
+  const items = filter ? state.inventory.filter(p => p.type === filter) : state.inventory.slice();
+  const tb = document.getElementById('inv-body');
+  if (!items.length) { tb.innerHTML = '<tr><td colspan="10" class="empty">No items</td></tr>'; renderInvMetrics(); return; }
+  // Group by type
+  const grps = {};
+  items.forEach(p => { if (!grps[p.type]) grps[p.type] = []; grps[p.type].push(p); });
+  const TORD = ['Original','Print','Card','Sticker','Mug','Journal','Book','Merch','Commission'];
+  let h = '';
+  TORD.forEach(ty => {
+    if (!grps[ty]) return;
+    h += `<tr class="gh"><td colspan="10">${ty}s</td></tr>`;
+    grps[ty].forEach(p => {
+      const isBundle = !!p.bundleOf;
+      const onHand = state.inv[p.sku] != null ? state.inv[p.sku] : (p.qty || 0);
+      const reorderAt = p.reorderAt;
+      let status = '<span class="st-ok">OK</span>';
+      if (p.type === 'Commission') {
+        status = '<span style="color:var(--ink3);font-size:11px">—</span>';
+      } else if (isBundle) {
+        // Bundle status derived from pool availability
+        const poolOnHand = state.inv[p.bundleOf] || 0;
+        const ups = p.bundleQty || 1;
+        const available = Math.floor(poolOnHand / ups);
+        if (available <= 0) status = '<span class="st-sold-out">SOLD OUT</span>';
+        else if (available <= 2) status = '<span class="st-restock">RESTOCK</span>';
+      } else {
+        if (onHand <= 0) status = '<span class="st-sold-out">SOLD OUT</span>';
+        else if (reorderAt != null && onHand <= reorderAt) status = '<span class="st-restock">RESTOCK</span>';
+      }
+      // On Hand cell: bundles show derived bundle count (read-only); commissions and bundles can't be edited
+      let ohCell;
+      if (p.type === 'Commission') {
+        ohCell = '<span style="color:var(--ink3);font-size:11px">—</span>';
+      } else if (isBundle) {
+        const poolOnHand = state.inv[p.bundleOf] || 0;
+        const ups = p.bundleQty || 1;
+        const available = Math.floor(poolOnHand / ups);
+        ohCell = `<span style="color:var(--ink3);font-size:11px" title="${available} bundles available · ${poolOnHand} units in '${p.bundleOf}' pool">via ${p.bundleOf}</span>`;
+      } else {
+        ohCell = `<input class="inv-input num" type="number" step="1" min="0" data-sku="${p.sku}" data-field="onHand" value="${onHand}">`;
+      }
+      const reorderCell = (p.type === 'Commission' || isBundle)
+        ? '<span style="color:var(--ink3);font-size:11px">—</span>'
+        : `<input class="inv-input num" type="number" step="1" min="0" data-sku="${p.sku}" data-field="reorderAt" value="${reorderAt != null ? reorderAt : ''}">`;
+      const rowDimmed = (onHand === 0 && !isBundle && p.type !== 'Commission') ? 'class="dimmed"' : '';
+      h += `<tr ${rowDimmed}>
+        <td><input class="inv-input notes" data-sku="${p.sku}" data-field="name" value="${escapeHtml(p.name)}"></td>
+        <td><span class="badge ${TC[p.type]||'b-gray'}">${p.type}${isBundle ? ' · bundle' : ''}</span></td>
+        <td><input class="inv-input num price" type="number" step="0.01" min="0" data-sku="${p.sku}" data-field="price" value="${p.price != null ? p.price : ''}"></td>
+        <td>${isBundle ? '<span style="color:var(--ink3);font-size:11px">—</span>' : `<input class="inv-input num price" type="number" step="0.01" min="0" data-sku="${p.sku}" data-field="cost" value="${p.cost != null ? p.cost : ''}">`}</td>
+        <td>${ohCell}</td>
+        <td>${reorderCell}</td>
+        <td>${status}</td>
+        <td><input class="inv-input notes" data-sku="${p.sku}" data-field="vendor" value="${escapeHtml(p.vendor || '')}"></td>
+        <td><input class="inv-input notes" data-sku="${p.sku}" data-field="notes" value="${escapeHtml(p.notes || '')}"></td>
+        <td><button class="btn btn-sm btn-danger" data-remove-sku="${p.sku}" title="Remove">✕</button></td>
+      </tr>`;
+    });
+  });
+  tb.innerHTML = h;
+  // Wire inputs
+  tb.querySelectorAll('input[data-sku]').forEach(inp => {
+    inp.onchange = () => onInventoryFieldChange(inp);
+  });
+  tb.querySelectorAll('button[data-remove-sku]').forEach(btn => {
+    btn.onclick = () => removeSku(btn.dataset.removeSku);
+  });
+  renderInvMetrics();
+  renderMovements();
+}
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+function onInventoryFieldChange(inp) {
+  const sku = inp.dataset.sku;
+  const field = inp.dataset.field;
+  const prod = findProduct(sku);
+  if (!prod) return;
+  let val = inp.value;
+  if (['price','cost','reorderAt','onHand'].includes(field)) {
+    val = val === '' ? null : parseFloat(val);
+    if (isNaN(val)) val = 0;
+  }
+  if (field === 'onHand') {
+    const old = state.inv[sku] != null ? state.inv[sku] : (prod.qty || 0);
+    const newVal = val == null ? 0 : val;
+    const delta = newVal - old;
+    state.inv[sku] = newVal;
+    if (delta !== 0) {
+      logMovement(sku, 'Manual Adjust', delta, `On Hand ${old} → ${newVal}`);
+    }
+  } else {
+    prod[field] = val;
+  }
+  saveState();
+  renderInventory();
+  render(); // refresh tracker tiles to reflect price/name changes
+}
+
+function renderInvMetrics() {
+  // Exclude commissions and bundle SKUs (bundles inherit from their pool — counting them double-counts)
+  const items = state.inventory.filter(p => p.type !== 'Commission' && !p.bundleOf);
+  const pcs = items.reduce((s, p) => s + (state.inv[p.sku] || 0), 0);
+  const pot = items.reduce((s, p) => s + (p.price || 0) * (state.inv[p.sku] || 0), 0);
+  const tcost = items.reduce((s, p) => s + (p.cost || 0) * (state.inv[p.sku] || 0), 0);
+  const restock = items.filter(p => {
+    const oh = state.inv[p.sku] || 0;
+    return oh === 0 || (p.reorderAt != null && oh <= p.reorderAt);
+  }).length;
+  document.getElementById('inv-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">SKUs</div><div class="metric-value">${items.length}</div></div>
+    <div class="metric"><div class="metric-label">Pieces in stock</div><div class="metric-value">${pcs}</div></div>
+    <div class="metric"><div class="metric-label">Potential revenue</div><div class="metric-value mv-green">$${pot.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Items needing restock</div><div class="metric-value mv-red">${restock}</div></div>
+  `;
+}
+
+function removeSku(sku) {
+  const prod = findProduct(sku);
+  if (!prod) return;
+  confirmAction('Remove SKU?', `Remove "${prod.name}" from inventory? Movements log entry will be added. Existing sales referencing this SKU are not affected.`, () => {
+    state.inventory = state.inventory.filter(p => p.sku !== sku);
+    delete state.inv[sku];
+    delete state.practiceInv[sku];
+    logMovement(sku, 'Remove SKU', null, `Removed "${prod.name}"`);
+    saveState(); renderInventory(); render(); toast('SKU removed');
+  });
+}
+
+document.getElementById('add-sku-btn').onclick = () => {
+  const name = document.getElementById('add-name').value.trim();
+  const type = document.getElementById('add-type').value;
+  const price = parseFloat(document.getElementById('add-price').value) || 0;
+  const cost = parseFloat(document.getElementById('add-cost').value);
+  const qty = parseInt(document.getElementById('add-qty').value) || 0;
+  const reorderAt = parseInt(document.getElementById('add-reorder').value);
+  const vendor = document.getElementById('add-vendor').value.trim();
+  const notes = document.getElementById('add-notes').value.trim();
+  if (!name) { toast('Name required'); return; }
+  // Generate sku from name
+  let baseSku = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,30) || 'sku';
+  let sku = baseSku;
+  let n = 2;
+  while (findProduct(sku)) { sku = baseSku + '-' + n; n++; }
+  const newProd = {
+    sku, name, type, price,
+    cost: isNaN(cost) ? null : cost,
+    qty, reorderAt: isNaN(reorderAt) ? null : reorderAt,
+    vendor, notes,
+    addons: (type === 'Print' || type === 'Original') ? ['matt-sm','frame'] : []
+  };
+  state.inventory.push(newProd);
+  state.inv[sku] = qty;
+  state.practiceInv[sku] = qty;
+  logMovement(sku, 'Add SKU', qty, `Added "${name}"`);
+  // Clear form
+  ['add-name','add-price','add-cost','add-vendor','add-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('add-qty').value = '0';
+  document.getElementById('add-reorder').value = '0';
+  saveState(); renderInventory(); render(); toast('SKU added');
+};
+
+document.getElementById('inv-filter').onchange = renderInventory;
+
+document.getElementById('inv-export-csv').onclick = () => {
+  const rows = [['SKU','Item','Type','Price','Cost','On Hand','Reorder At','Status','Vendor','Notes']];
+  state.inventory.forEach(p => {
+    const oh = state.inv[p.sku] != null ? state.inv[p.sku] : (p.qty || 0);
+    let status = 'OK';
+    if (p.type !== 'Commission') {
+      if (oh <= 0) status = 'SOLD OUT';
+      else if (p.reorderAt != null && oh <= p.reorderAt) status = 'RESTOCK';
+    } else { status = '—'; }
+    rows.push([p.sku, p.name, p.type, p.price, p.cost == null ? '' : p.cost, p.type === 'Commission' ? '' : oh, p.reorderAt == null ? '' : p.reorderAt, status, p.vendor || '', p.notes || '']);
+  });
+  downloadCSV(rows, `art_by_ogden_inventory_${todayStr()}.csv`);
+  toast('Inventory CSV exported');
+};
+
+document.getElementById('inv-export-json').onclick = () => {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    date: todayStr(),
+    inventory: state.inventory.map(p => ({
+      sku: p.sku, name: p.name, type: p.type,
+      price: p.price, cost: p.cost,
+      onHand: state.inv[p.sku] != null ? state.inv[p.sku] : (p.qty || 0),
+      reorderAt: p.reorderAt, vendor: p.vendor, notes: p.notes
+    })),
+    movements: state.movements,
+    sales: state.sales
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `art_by_ogden_inventory_${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Inventory JSON exported');
+};
+
+/* ---------- Movements ---------- */
+function renderMovements() {
+  const filter = document.getElementById('mv-filter').value;
+  const movs = state.movements.slice().reverse();
+  const filtered = filter ? movs.filter(m => m.type === filter) : movs;
+  const tb = document.getElementById('mv-body');
+  if (!filtered.length) { tb.innerHTML = '<tr><td colspan="6" class="empty">No movements yet</td></tr>'; return; }
+  tb.innerHTML = filtered.slice(0, 200).map(m => {
+    const prod = findProduct(m.sku);
+    const itemName = prod ? prod.name : m.sku;
+    const qtyStr = m.qtyChange == null ? '—' : (m.qtyChange > 0 ? '+' : '') + m.qtyChange;
+    const qtyColor = m.qtyChange == null ? 'var(--ink3)' : m.qtyChange > 0 ? 'var(--primary)' : 'var(--red)';
+    return `<tr>
+      <td style="font-size:12px;color:var(--ink3);white-space:nowrap">${m.date} · ${m.time}</td>
+      <td><span class="badge b-gray">${m.type}</span></td>
+      <td style="font-size:12px">${escapeHtml(itemName)}</td>
+      <td style="font-weight:700;color:${qtyColor};font-size:13px">${qtyStr}</td>
+      <td style="font-size:12px;color:var(--ink3)">${escapeHtml(m.reason)}</td>
+      <td><button class="btn btn-sm btn-danger" data-remove-mv="${m.id}">✕</button></td>
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('button[data-remove-mv]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.removeMv;
+      confirmAction('Delete movement?', 'Removes the audit-log entry only. Does not reverse the underlying On Hand change.', () => {
+        state.movements = state.movements.filter(m => m.id !== id);
+        saveState(); renderMovements(); toast('Entry deleted');
+      });
+    };
+  });
+}
+document.getElementById('mv-filter').onchange = renderMovements;
+document.getElementById('mv-add-btn').onclick = () => {
+  // Populate SKU select
+  const sel = document.getElementById('mv-sku');
+  sel.innerHTML = state.inventory.map(p => `<option value="${p.sku}">${escapeHtml(p.name)}</option>`).join('');
+  document.getElementById('mv-type').value = 'Restock Received';
+  document.getElementById('mv-qty').value = '';
+  document.getElementById('mv-reason').value = '';
+  openModal('manual-mv-modal');
+};
+document.getElementById('mv-save-btn').onclick = () => {
+  const sku = document.getElementById('mv-sku').value;
+  const type = document.getElementById('mv-type').value;
+  const qty = parseInt(document.getElementById('mv-qty').value);
+  const reason = document.getElementById('mv-reason').value.trim();
+  if (!sku) { toast('Select an item'); return; }
+  if (isNaN(qty)) { toast('Qty required'); return; }
+  if (type === 'Restock Received' || type === 'Manual Adjust') {
+    state.inv[sku] = Math.max(0, (state.inv[sku] || 0) + qty);
+  }
+  // Restock Ordered: log only, no qty change
+  logMovement(sku, type, qty, reason);
+  saveState();
+  closeModal('manual-mv-modal');
+  renderInventory(); render();
+  toast('Movement logged');
+};
+
+/* ============================================================
+   PRICE SHEET PANEL — auto-derived from current inventory
+   ============================================================ */
+function renderPrices() {
+  const groups = ['Sticker','Card','Print','Original','Mug','Journal','Book','Merch','Commission'];
+  const groupLabel = {Sticker:'Stickers',Card:'Greeting cards',Print:'Prints',Original:'Originals',Mug:'Mugs',Journal:'Journals & sketchbooks',Book:'Books',Merch:'Merch',Commission:'Commissions'};
+  const groupNote = {
+    Print: 'Matt & frame add-ons at point of sale: matt <10" +$15 · matt 10"+ +$20 · frame +$50',
+    Original: 'Per-piece pricing. Matt & frame add-ons available at point of sale.',
+  };
+  let h = '';
+  groups.forEach(g => {
+    const items = state.inventory.filter(p => p.type === g);
+    if (!items.length) return;
+    h += `<div class="card"><div class="card-title">${groupLabel[g]}</div>`;
+    if (groupNote[g]) h += `<p class="ps-note">${groupNote[g]}</p>`;
+    h += `<div class="tbl-wrap"><table class="ps-table">
+      <thead><tr><th>Item</th><th>Price</th><th>Notes</th></tr></thead><tbody>`;
+    items.forEach(p => {
+      // For bundle SKUs, availability comes from their pool
+      const invSku = inventorySkuFor(p);
+      const ups = unitsPerSaleFor(p);
+      const oh = state.inv[invSku] != null ? state.inv[invSku] : (p.qty || 0);
+      const available = Math.floor(oh / ups);
+      const note = p.type === 'Commission' ? '50% deposit at event · balance on delivery'
+        : (available <= 0 ? 'Sold out — taking orders' : '');
+      const priceStr = p.type === 'Original' ? `from ${money(p.price)}` : money(p.price);
+      h += `<tr><td>${escapeHtml(p.name)}</td><td>${priceStr}</td><td>${escapeHtml(note)}</td></tr>`;
+    });
+    h += '</tbody></table></div></div>';
+  });
+  document.getElementById('ps-body').innerHTML = h;
+}
+
+/* ============================================================
+   CHECKLIST PANEL
+   ============================================================ */
+function renderChecklist() {
+  let h = '';
+  CK_DEFAULT.forEach(cat => {
+    const done = cat.items.filter((_, i) => state.checklist[cat.cat + '|' + i]).length;
+    h += `<div class="ck-group"><div class="ck-group-title"><span class="ck-group-name">${cat.cat}</span><span class="ck-count">${done}/${cat.items.length}</span></div>`;
+    cat.items.forEach((item, i) => {
+      const key = cat.cat + '|' + i;
+      const chk = !!state.checklist[key];
+      const safeKey = key.replace(/[^a-z0-9]/gi, '_');
+      h += `<div class="ck-item ${chk ? 'ck-done' : ''}">
+        <input type="checkbox" id="ck_${safeKey}" data-key="${escapeHtml(key)}" ${chk ? 'checked' : ''}>
+        <label for="ck_${safeKey}" class="ck-content">
+          <div class="ck-title">${escapeHtml(item.t)}</div>
+          <div class="ck-note">${escapeHtml(item.n)}</div>
+        </label>
+      </div>`;
+    });
+    h += '</div>';
+  });
+  document.getElementById('ck-body').innerHTML = h;
+  document.querySelectorAll('#panel-checklist input[type=checkbox][data-key]').forEach(cb => {
+    cb.onchange = () => {
+      state.checklist[cb.dataset.key] = cb.checked;
+      saveState(); renderChecklist();
+    };
+  });
+  renderCkProgress();
+}
+function renderCkProgress() {
+  let t = 0, d = 0;
+  CK_DEFAULT.forEach(c => c.items.forEach((_, i) => {
+    t++;
+    if (state.checklist[c.cat + '|' + i]) d++;
+  }));
+  document.getElementById('ck-done').textContent = d;
+  document.getElementById('ck-tot').textContent = t;
+  document.getElementById('ck-bar').style.width = (t ? Math.round(d / t * 100) : 0) + '%';
+}
+document.getElementById('ck-all').onclick = () => {
+  CK_DEFAULT.forEach(c => c.items.forEach((_, i) => state.checklist[c.cat + '|' + i] = true));
+  saveState(); renderChecklist();
+};
+document.getElementById('ck-reset').onclick = () => {
+  state.checklist = {};
+  saveState(); renderChecklist();
+};
+
+/* ============================================================
+   BUSINESS PLAN PANEL
+   ============================================================ */
+function renderPlan() {
+  document.getElementById('pe-booth').value = state.plan.booth || 0;
+  document.getElementById('pe-other').value = state.plan.other || 0;
+  recomputePlan();
+}
+function recomputePlan() {
+  const booth = parseFloat(document.getElementById('pe-booth').value) || 0;
+  const other = parseFloat(document.getElementById('pe-other').value) || 0;
+  state.plan.booth = booth;
+  state.plan.other = other;
+  saveState();
+  const sales = _sales();
+  const gross = sales.reduce((s, x) => s + x.total, 0);
+  const tax = sales.reduce((s, x) => s + x.tax, 0);
+  const net = gross - tax;
+  const costs = booth + other;
+  const profit = net - costs;
+  const pct = costs > 0 ? Math.min(100, Math.round(net / costs * 100)) : (net > 0 ? 100 : 0);
+  document.getElementById('plan-d').innerHTML = `
+    <div class="prow"><span class="prow-label">Total costs</span><span class="prow-val">${money(costs)}</span></div>
+    <div class="prow"><span class="prow-label">Gross revenue</span><span class="prow-val mv-green">${money(gross)}</span></div>
+    <div class="prow"><span class="prow-label">Tax to remit</span><span class="prow-val mv-gold">${money(tax)}</span></div>
+    <div class="prow"><span class="prow-label">Net after tax</span><span class="prow-val mv-blue">${money(net)}</span></div>
+    <div class="prow"><span class="prow-label" style="font-weight:700">Profit / Loss</span><span class="prow-val" style="color:${profit >= 0 ? 'var(--primary)' : 'var(--red)'};font-size:16px">${profit >= 0 ? '+' : ''}${money(profit)}</span></div>
+    <div style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-bottom:5px"><span>Break-even progress</span><span>${pct}%</span></div>
+      <div class="prog-wrap"><div class="prog-fill" style="width:${pct}%;background:${profit >= 0 ? 'var(--primary)' : 'var(--blue)'}"></div></div>
+    </div>`;
+}
+document.getElementById('pe-booth').oninput = recomputePlan;
+document.getElementById('pe-other').oninput = recomputePlan;
+
+/* ============================================================
+   WIRE UP
+   ============================================================ */
+document.getElementById('undo-btn').onclick = undoLast;
+document.getElementById('void-btn').onclick = voidCart;
+document.getElementById('pay-cash').onclick = () => checkout('Cash');
+document.getElementById('pay-venmo').onclick = () => checkout('Venmo');
+document.getElementById('pay-card').onclick = () => checkout('Card');
+document.getElementById('summary-btn').onclick = showSummary;
+document.getElementById('export-btn').onclick = exportCSV;
+document.getElementById('reset-btn').onclick = resetDay;
+document.getElementById('practice-toggle').addEventListener('touchend', function(e) { e.preventDefault(); togglePractice(); }, { passive: false });
+document.getElementById('practice-toggle').onclick = togglePractice;
+document.getElementById('undo-sale-btn').onclick = undoLastSale;
+
+render();
+</script>
+</body>
+</html>
