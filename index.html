@@ -556,6 +556,7 @@
       <div class="prow"><span class="prow-label">Instagram</span><span class="prow-val">@artbyogden</span></div>
       <div class="prow"><span class="prow-label">Sales tax (Orem, Utah County)</span><span class="prow-val">7.65%</span></div>
       <div class="prow"><span class="prow-label">Payment methods</span><span class="prow-val">Venmo · Cash · Card (Square)</span></div>
+      <div class="prow"><span class="prow-label">Inventory last synced</span><span class="prow-val" id="sync-status" style="font-size:12px;color:var(--ink3)">Checking…</span></div>
     </div>
 
     <div class="card">
@@ -598,7 +599,7 @@
 <footer class="pos-footer">
   <button class="footer-btn" id="undo-sale-btn" disabled>↶ Undo Sale</button>
   <button class="footer-btn" id="summary-btn">Day Summary</button>
-  <button class="footer-btn primary" id="export-btn">Export CSV</button>
+  <button class="footer-btn primary" id="close-day-btn">✓ Close Day</button>
   <button class="footer-btn" id="reset-btn">Reset Day</button>
 </footer>
 
@@ -741,6 +742,14 @@
    ============================================================ */
 
 const TAX_RATE = 0.0765;  // Orem, Utah County combined rate (was 0.0745 for West Jordan).
+
+/* ---------- GitHub inventory sync ----------
+   On startup the app fetches the canonical inventory JSON from GitHub.
+   If the GitHub copy is newer than localStorage, it wins (inventory + movements only;
+   today's sales are always local). After Close Day, upload the exported JSON to GitHub
+   (via Claude) to keep all devices in sync.
+*/
+const GITHUB_INVENTORY_URL = 'https://raw.githubusercontent.com/heathogden/artbyogden/main/inventory.json';
 const STORAGE_KEY = 'artbyogden_app_v3';
 
 /* ---------- Inventory baseline (post-Art-in-the-Park, May 2 2026) ---------- */
@@ -756,8 +765,7 @@ const INVENTORY_SEED = [
   { sku: 'print-5x7',        name: 'Print 5x7',              type: 'Print',      price: 10,  cost: 2.54,  qty: 54,  reorderAt: 20, vendor: 'Persnickety+GicleeToday+Mpix', notes: '2/62 sold May 2. 6 sold at Orem 5/13.', addons: ['matt-sm','frame'] },
   { sku: 'print-8x10',       name: 'Print 8x10',             type: 'Print',      price: 20,  cost: 3.79,  qty: 14,  reorderAt: 5,  vendor: 'Persnickety',                 notes: '1/15 sold May 2.', addons: ['matt-sm','frame'] },
   { sku: 'print-11x14p',     name: 'Print 11x14 premium',    type: 'Print',      price: 80,  cost: 29.99, qty: 5,   reorderAt: 2,  vendor: 'Printkeg',                    notes: '0/5 sold May 2. Take orders if interest.', addons: ['matt-lg','frame'] },
-  { sku: 'giclee-11x14',     name: 'Giclee 11x14 — Mantodea',type: 'Print',      price: 128, cost: 31.99, qty: 1,   reorderAt: 1,  vendor: 'Persnickety',                 notes: 'Statement piece.', addons: ['matt-lg','frame'] },
-  { sku: 'giclee-16x20',     name: 'Giclee 16x20 — anchor',  type: 'Print',      price: 168, cost: 41.99, qty: 1,   reorderAt: 1,  vendor: 'Persnickety',                 notes: 'Anchor display piece.', addons: ['matt-lg','frame'] },
+
   // Cards
   { sku: 'card-folded',      name: 'Greeting card 5x7',      type: 'Card',       price: 5,   cost: 1.31,  qty: 49,  reorderAt: 20, vendor: 'Printkeg',                    notes: '0/50 sold May 2. 1 sold $7 at Orem 5/13 (above list).' },
   { sku: 'card-mini-pack',   name: 'Mini card pack (5)',     type: 'Card',       price: 15,  cost: 6.50,  qty: 22,  reorderAt: 8,  vendor: 'Printkeg',                    notes: '2/20 sold May 2. Recounted + restocked 5/9 (24). 2 sold at Orem 5/13.' },
@@ -859,6 +867,7 @@ let state = {
   movements: [],         // { id, date, time, sku, type, qtyChange, reason }
   checklist: {},         // key -> bool
   plan: { booth: 0, other: 0 },
+  lastSyncedAt: null,    // ISO string of last GitHub sync
   // practice
   practiceMode: false,
   practiceInv: {},
@@ -873,6 +882,42 @@ if (state.date !== todayStr()) {
   state.date = todayStr();
   saveState();
 }
+
+/* ---------- GitHub startup sync ----------
+   Silently fetch inventory.json from GitHub on load.
+   If it's newer than what's in localStorage, merge inventory + movements.
+   Today's sales are always kept from localStorage (device-local).
+*/
+(async function syncFromGitHub() {
+  try {
+    const res = await fetch(GITHUB_INVENTORY_URL + '?_=' + Date.now());
+    if (!res.ok) return;
+    const remote = await res.json();
+    if (!remote || !remote.exportedAt) return;
+    const remoteDate = new Date(remote.exportedAt);
+    const localDate = state.lastSyncedAt ? new Date(state.lastSyncedAt) : new Date(0);
+    if (remoteDate <= localDate) return; // already up to date
+    // Merge: remote inventory + movements win; today's sales stay
+    if (Array.isArray(remote.inventory) && remote.inventory.length > 0) {
+      // Rebuild state.inventory and state.inv from remote
+      state.inventory = remote.inventory.map(p => {
+        // Preserve addons from seed if not in remote
+        const seed = INVENTORY_SEED.find(s => s.sku === p.sku);
+        return Object.assign({}, seed || {}, p, { qty: p.onHand });
+      });
+      remote.inventory.forEach(p => { state.inv[p.sku] = p.onHand; });
+    }
+    if (Array.isArray(remote.movements)) {
+      state.movements = remote.movements;
+    }
+    state.lastSyncedAt = remote.exportedAt;
+    saveState();
+    toast('📦 Inventory synced from GitHub');
+    render(); renderInventory();
+  } catch (e) {
+    // Silent fail — no network or file not found yet
+  }
+})();
 
 /* ---------- Practice-aware accessors ---------- */
 const _cart  = () => state.practiceMode ? state.practiceCart  : state.cart;
@@ -1430,6 +1475,41 @@ function downloadCSV(rows, name) {
   URL.revokeObjectURL(url);
 }
 
+/* ---------- Close Day — exports CSV + JSON together ---------- */
+function closeDay() {
+  const sales = _sales();
+  if (state.practiceMode) { toast('Exit practice mode first'); return; }
+  const label = sales.length === 0 ? 'Close day with no sales?' : `Close day? (${sales.length} sale${sales.length !== 1 ? 's' : ''})`;
+  const sub = `Exports today's sales CSV and updated inventory JSON. Upload the JSON to Claude to sync all your devices.`;
+  confirmAction(label, sub, () => {
+    // 1. Export sales CSV (even if empty, for the record)
+    if (sales.length > 0) exportCSV();
+    // 2. Export inventory JSON
+    const now = new Date().toISOString();
+    const data = {
+      exportedAt: now,
+      date: todayStr(),
+      inventory: state.inventory.map(p => ({
+        sku: p.sku, name: p.name, type: p.type,
+        price: p.price, cost: p.cost,
+        onHand: state.inv[p.sku] != null ? state.inv[p.sku] : (p.qty || 0),
+        reorderAt: p.reorderAt, vendor: p.vendor, notes: p.notes
+      })),
+      movements: state.movements,
+      sales: []  // sales stay in CSV; keep JSON clean for inventory sync
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `art_by_ogden_inventory_${todayStr()}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    state.lastSyncedAt = now;
+    saveState();
+    toast('✓ Day closed — CSV + JSON exported. Upload JSON to Claude!');
+  });
+}
+
 function resetDay() {
   const sales = _sales();
   const label = state.practiceMode ? 'Reset practice?' : 'Reset day?';
@@ -1910,6 +1990,17 @@ document.getElementById('ck-reset').onclick = () => {
 function renderPlan() {
   document.getElementById('pe-booth').value = state.plan.booth || 0;
   document.getElementById('pe-other').value = state.plan.other || 0;
+  const el = document.getElementById('sync-status');
+  if (el) {
+    if (state.lastSyncedAt) {
+      const d = new Date(state.lastSyncedAt);
+      el.textContent = d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      el.style.color = 'var(--primary)';
+    } else {
+      el.textContent = 'Not yet synced';
+      el.style.color = 'var(--ink3)';
+    }
+  }
   recomputePlan();
 }
 function recomputePlan() {
@@ -1948,7 +2039,7 @@ document.getElementById('pay-cash').onclick = () => checkout('Cash');
 document.getElementById('pay-venmo').onclick = () => checkout('Venmo');
 document.getElementById('pay-card').onclick = () => checkout('Card');
 document.getElementById('summary-btn').onclick = showSummary;
-document.getElementById('export-btn').onclick = exportCSV;
+document.getElementById('close-day-btn').onclick = closeDay;
 document.getElementById('reset-btn').onclick = resetDay;
 document.getElementById('practice-toggle').addEventListener('touchend', function(e) { e.preventDefault(); togglePractice(); }, { passive: false });
 document.getElementById('practice-toggle').onclick = togglePractice;
