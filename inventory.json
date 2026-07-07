@@ -1,27 +1,848 @@
 {
-  "exportedAt": "2026-05-28T04:12:55.076Z",
-  "date": "2026-05-28",
+  "exportedAt": "2026-07-05T00:01:18.459Z",
+  "date": "2026-07-05",
   "inventory": [
-    {"sku":"orig-4x6","name":"Original 4x6","type":"Original","price":25,"cost":null,"onHand":2,"reorderAt":1,"vendor":"Heath","notes":"Per-piece pricing. Counted 2026-05-09 at 6; -1 sold at Orem 5/13."},
-    {"sku":"orig-5x7","name":"Original 5x7","type":"Original","price":40,"cost":null,"onHand":0,"reorderAt":1,"vendor":"Heath","notes":"Per-piece pricing. Counted 2026-05-09."},
-    {"sku":"orig-9x6","name":"Original 9x6","type":"Original","price":50,"cost":null,"onHand":20,"reorderAt":1,"vendor":"Heath","notes":"Commissions $75 · ~1.5hr fast pieces. Counted 2026-05-09."},
-    {"sku":"orig-9x12","name":"Original 9x12","type":"Original","price":100,"cost":null,"onHand":28,"reorderAt":2,"vendor":"Heath","notes":"Counted 2026-05-09 at 30. -1 to Brianna Jones 5/12. -1 sold $80 at Orem 5/13. Now 28."},
-    {"sku":"print-4x6","name":"Print 4x6","type":"Print","price":5,"cost":2.54,"onHand":86,"reorderAt":30,"vendor":"Persnickety+Mpix","notes":"0/90 sold May 2 (large dead inventory). 1 sold $5 at Orem 5/13."},
-    {"sku":"print-5x7","name":"Print 5x7","type":"Print","price":10,"cost":2.54,"onHand":50,"reorderAt":20,"vendor":"Persnickety+GicleeToday+Mpix","notes":"2/62 sold May 2. 6 sold at Orem 5/13."},
-    {"sku":"print-8x10","name":"Print 8x10","type":"Print","price":20,"cost":3.79,"onHand":12,"reorderAt":5,"vendor":"Persnickety","notes":"1/15 sold May 2."},
-    {"sku":"print-11x14p","name":"Print 11x14 premium","type":"Print","price":80,"cost":29.99,"onHand":5,"reorderAt":2,"vendor":"Printkeg","notes":"0/5 sold May 2. Take orders if interest."},
-    {"sku":"card-folded","name":"Greeting card 5x7","type":"Card","price":7,"cost":1.31,"onHand":46,"reorderAt":20,"vendor":"Printkeg","notes":"0/50 sold May 2. 1 sold $7 at Orem 5/13 (above list)."},
-    {"sku":"card-mini-pack","name":"Mini card pack (5)","type":"Card","price":15,"cost":6.5,"onHand":19,"reorderAt":8,"vendor":"Printkeg","notes":"2/20 sold May 2. Recounted + restocked 5/9 (24). 2 sold at Orem 5/13."},
-    {"sku":"sticker","name":"Sticker","type":"Sticker","price":3,"cost":1.1,"onHand":30,"reorderAt":15,"vendor":"Stickr","notes":"Consolidated SKU for all sticker designs."},
-    {"sku":"sticker-bundle-2","name":"Stickers 2 for $5","type":"Sticker","price":5,"cost":null,"onHand":0,"reorderAt":null,"vendor":"Stickr","notes":"Bundle SKU: $5 for any 2 stickers. Decrements 2 from the \"Sticker\" pool per sale."},
-    {"sku":"mug-11oz","name":"Mug 11oz","type":"Mug","price":20,"cost":7.66,"onHand":8,"reorderAt":4,"vendor":"CanvasChamp","notes":"3/12 sold May 2. 1 sold $15 (discounted) at Orem 5/13."},
-    {"sku":"journal-a5","name":"Journal A5","type":"Journal","price":20,"cost":10.49,"onHand":13,"reorderAt":4,"vendor":"Persnickety","notes":"1/11 sold May 2. Was $21 → $20. Persnickety order #43292899 received 2026-05-11 (+3)."},
-    {"sku":"journal-field","name":"Field journal","type":"Journal","price":15,"cost":7.65,"onHand":9,"reorderAt":2,"vendor":"Persnickety","notes":"0/3 sold May 2. Persnickety order #43292899 received 2026-05-11 (+6)."},
-    {"sku":"book-the-orders","name":"The Orders (book)","type":"Book","price":30,"cost":8.665,"onHand":184,"reorderAt":30,"vendor":"QinPrinting","notes":"2nd printing 200 copies. -3 May 2, -4 May 5 workshop, -1 Orem 5/13. Now 185."},
-    {"sku":"magnet","name":"Magnet","type":"Merch","price":10,"cost":5,"onHand":9,"reorderAt":4,"vendor":"Heath","notes":"Price raised $5 → $10 on 2026-05-12."},
-    {"sku":"commission-9x6","name":"Commission 9x6","type":"Commission","price":75,"cost":null,"onHand":0,"reorderAt":null,"vendor":"Heath","notes":"50% deposit at event · balance $37.50 on delivery."},
-    {"sku":"u-paint","name":"U paint","type":"Original","price":5,"cost":null,"onHand":23,"reorderAt":0,"vendor":"","notes":""}
+    {
+      "sku": "orig-4x6",
+      "name": "Original 4x6",
+      "type": "Original",
+      "price": 25,
+      "cost": null,
+      "onHand": 19,
+      "reorderAt": 1,
+      "vendor": "Heath",
+      "notes": "Per-piece pricing. Counted 2026-05-09 at 6; -1 sold at Orem 5/13."
+    },
+    {
+      "sku": "orig-5x7",
+      "name": "Original 5x7",
+      "type": "Original",
+      "price": 40,
+      "cost": null,
+      "onHand": 19,
+      "reorderAt": 1,
+      "vendor": "Heath",
+      "notes": "Per-piece pricing. Counted 2026-05-09."
+    },
+    {
+      "sku": "orig-9x6",
+      "name": "Original 9x6",
+      "type": "Original",
+      "price": 50,
+      "cost": null,
+      "onHand": 20,
+      "reorderAt": 1,
+      "vendor": "Heath",
+      "notes": "Commissions $75 · ~1.5hr fast pieces. Counted 2026-05-09."
+    },
+    {
+      "sku": "orig-9x12",
+      "name": "Original 9x12",
+      "type": "Original",
+      "price": 100,
+      "cost": null,
+      "onHand": 28,
+      "reorderAt": 2,
+      "vendor": "Heath",
+      "notes": "Counted 2026-05-09 at 30. -1 to Brianna Jones 5/12. -1 sold $80 at Orem 5/13. Now 28."
+    },
+    {
+      "sku": "print-4x6",
+      "name": "Print 4x6",
+      "type": "Print",
+      "price": 5,
+      "cost": 2.54,
+      "onHand": 86,
+      "reorderAt": 30,
+      "vendor": "Persnickety+Mpix",
+      "notes": "0/90 sold May 2 (large dead inventory). 1 sold $5 at Orem 5/13."
+    },
+    {
+      "sku": "print-5x7",
+      "name": "Print 5x7",
+      "type": "Print",
+      "price": 10,
+      "cost": 2.54,
+      "onHand": 39,
+      "reorderAt": 20,
+      "vendor": "Persnickety+GicleeToday+Mpix",
+      "notes": "2/62 sold May 2. 6 sold at Orem 5/13."
+    },
+    {
+      "sku": "print-8x10",
+      "name": "Print 8x10",
+      "type": "Print",
+      "price": 20,
+      "cost": 3.79,
+      "onHand": 11,
+      "reorderAt": 5,
+      "vendor": "Persnickety",
+      "notes": "1/15 sold May 2."
+    },
+    {
+      "sku": "print-11x14p",
+      "name": "Print 11x14 premium",
+      "type": "Print",
+      "price": 80,
+      "cost": 29.99,
+      "onHand": 4,
+      "reorderAt": 2,
+      "vendor": "Printkeg",
+      "notes": "0/5 sold May 2. Take orders if interest."
+    },
+    {
+      "sku": "card-folded",
+      "name": "Greeting card 5x7",
+      "type": "Card",
+      "price": 7,
+      "cost": 1.31,
+      "onHand": 46,
+      "reorderAt": 20,
+      "vendor": "Printkeg",
+      "notes": "0/50 sold May 2. 1 sold $7 at Orem 5/13 (above list)."
+    },
+    {
+      "sku": "card-mini-pack",
+      "name": "Mini card pack (5)",
+      "type": "Card",
+      "price": 15,
+      "cost": 6.5,
+      "onHand": 17,
+      "reorderAt": 8,
+      "vendor": "Printkeg",
+      "notes": "2/20 sold May 2. Recounted + restocked 5/9 (24). 2 sold at Orem 5/13."
+    },
+    {
+      "sku": "sticker",
+      "name": "Sticker",
+      "type": "Sticker",
+      "price": 3,
+      "cost": 1.1,
+      "onHand": 16,
+      "reorderAt": 15,
+      "vendor": "Stickr",
+      "notes": "Consolidated SKU for all sticker designs. Math-sum post-May-13: 0 red + 8 dark + 10 blue + 9 monarch + 9 swallow + 9 pineapple + 5 orchid = 50 (red beetle count TBD)."
+    },
+    {
+      "sku": "sticker-bundle-2",
+      "name": "Stickers 2 for $5",
+      "type": "Sticker",
+      "price": 5,
+      "cost": null,
+      "onHand": 0,
+      "reorderAt": null,
+      "vendor": "Stickr",
+      "notes": "Bundle SKU: $5 for any 2 stickers. Decrements 2 from the \"Sticker\" pool per sale."
+    },
+    {
+      "sku": "mug-11oz",
+      "name": "Mug 11oz",
+      "type": "Mug",
+      "price": 20,
+      "cost": 7.66,
+      "onHand": 8,
+      "reorderAt": 4,
+      "vendor": "CanvasChamp",
+      "notes": "3/12 sold May 2. 1 sold $15 (discounted) at Orem 5/13."
+    },
+    {
+      "sku": "journal-a5",
+      "name": "Journal A5",
+      "type": "Journal",
+      "price": 20,
+      "cost": 10.49,
+      "onHand": 12,
+      "reorderAt": 4,
+      "vendor": "Persnickety",
+      "notes": "1/11 sold May 2. Was $21 → $20. Persnickety order #43292899 received 2026-05-11 (+3)."
+    },
+    {
+      "sku": "journal-field",
+      "name": "Field journal",
+      "type": "Journal",
+      "price": 15,
+      "cost": 7.65,
+      "onHand": 9,
+      "reorderAt": 2,
+      "vendor": "Persnickety",
+      "notes": "0/3 sold May 2. Persnickety order #43292899 received 2026-05-11 (+6)."
+    },
+    {
+      "sku": "book-the-orders",
+      "name": "The Orders (book)",
+      "type": "Book",
+      "price": 30,
+      "cost": 8.665,
+      "onHand": 180,
+      "reorderAt": 30,
+      "vendor": "QinPrinting",
+      "notes": "2nd printing 200 copies. -3 May 2, -4 May 5 workshop, -1 Orem 5/13. Now 185."
+    },
+    {
+      "sku": "magnet",
+      "name": "Magnet",
+      "type": "Merch",
+      "price": 10,
+      "cost": 5,
+      "onHand": 9,
+      "reorderAt": 4,
+      "vendor": "Heath",
+      "notes": "Mixed: 6 free (art show) + 4 from Persnickety #43292899. Price raised $5 → $10 on 2026-05-12 to cover $5/unit marginal cost. 50% margin."
+    },
+    {
+      "sku": "commission-9x6",
+      "name": "Commission 9x6",
+      "type": "Commission",
+      "price": 75,
+      "cost": null,
+      "onHand": 0,
+      "reorderAt": null,
+      "vendor": "Heath",
+      "notes": "50% deposit at event · balance $37.50 on delivery."
+    },
+    {
+      "sku": "u-paint",
+      "name": "U paint",
+      "type": "Original",
+      "price": 5,
+      "cost": null,
+      "onHand": 23,
+      "reorderAt": 0,
+      "vendor": "",
+      "notes": ""
+    }
   ],
-  "movements": [],
+  "movements": [
+    {
+      "id": "t6mbrftd",
+      "date": "2026-05-16",
+      "time": "10:18 PM",
+      "sku": "giclee-11x14",
+      "type": "Remove SKU",
+      "qtyChange": null,
+      "reason": "Removed \"Giclee 11x14 — Mantodea\""
+    },
+    {
+      "id": "y9y9llij",
+      "date": "2026-05-16",
+      "time": "10:19 PM",
+      "sku": "giclee-16x20",
+      "type": "Remove SKU",
+      "qtyChange": null,
+      "reason": "Removed \"Print 16x20\""
+    },
+    {
+      "id": "z399a675",
+      "date": "2026-05-16",
+      "time": "10:20 PM",
+      "sku": "journal-a6",
+      "type": "Remove SKU",
+      "qtyChange": null,
+      "reason": "Removed \"Journal A6\""
+    },
+    {
+      "id": "l0e4h553",
+      "date": "2026-05-20",
+      "time": "5:27 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #1 (Cash) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "sw9708fp",
+      "date": "2026-05-20",
+      "time": "5:42 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #2 (Card)"
+    },
+    {
+      "id": "3enx70ej",
+      "date": "2026-05-20",
+      "time": "5:42 PM",
+      "sku": "orig-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #2 (Card)"
+    },
+    {
+      "id": "5mpiro0e",
+      "date": "2026-05-20",
+      "time": "5:50 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #3 (Card) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "l5y5kf9u",
+      "date": "2026-05-21",
+      "time": "6:00 PM",
+      "sku": "u-paint",
+      "type": "Add SKU",
+      "qtyChange": 0,
+      "reason": "Added \"U paint\""
+    },
+    {
+      "id": "twxdr0x3",
+      "date": "2026-05-21",
+      "time": "6:01 PM",
+      "sku": "u-paint",
+      "type": "Manual Adjust",
+      "qtyChange": 30,
+      "reason": "On Hand 0 → 30"
+    },
+    {
+      "id": "92w1qgur",
+      "date": "2026-05-21",
+      "time": "6:02 PM",
+      "sku": "u-paint",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #4 (Cash)"
+    },
+    {
+      "id": "jduyu0wo",
+      "date": "2026-05-21",
+      "time": "6:07 PM",
+      "sku": "u-paint",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #5 (Venmo)"
+    },
+    {
+      "id": "xzcipq72",
+      "date": "2026-05-21",
+      "time": "6:33 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #6 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "588n3524",
+      "date": "2026-05-21",
+      "time": "6:43 PM",
+      "sku": "print-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #7 (Venmo)"
+    },
+    {
+      "id": "igi9niii",
+      "date": "2026-05-21",
+      "time": "6:57 PM",
+      "sku": "orig-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #8 (Venmo)"
+    },
+    {
+      "id": "r320e38n",
+      "date": "2026-05-21",
+      "time": "6:57 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #9 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "1w4ebfqs",
+      "date": "2026-05-21",
+      "time": "6:57 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #9 (Venmo)"
+    },
+    {
+      "id": "xce8h9kk",
+      "date": "2026-05-21",
+      "time": "7:06 PM",
+      "sku": "card-folded",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #10 (Venmo)"
+    },
+    {
+      "id": "5cgd1ikm",
+      "date": "2026-05-21",
+      "time": "7:06 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #10 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "9lror78j",
+      "date": "2026-05-21",
+      "time": "7:27 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #11 (Venmo)"
+    },
+    {
+      "id": "zg1j79cr",
+      "date": "2026-05-21",
+      "time": "7:28 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #12 (Card)"
+    },
+    {
+      "id": "b6lvyicp",
+      "date": "2026-05-21",
+      "time": "7:32 PM",
+      "sku": "card-mini-pack",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #13 (Venmo)"
+    },
+    {
+      "id": "uqzvna67",
+      "date": "2026-05-21",
+      "time": "7:32 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #14 (Venmo)"
+    },
+    {
+      "id": "tjm48ctx",
+      "date": "2026-05-21",
+      "time": "7:47 PM",
+      "sku": "u-paint",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #15 (Cash)"
+    },
+    {
+      "id": "qutqt27a",
+      "date": "2026-05-21",
+      "time": "7:51 PM",
+      "sku": "card-mini-pack",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #16 (Venmo)"
+    },
+    {
+      "id": "ya7x5q1p",
+      "date": "2026-05-27",
+      "time": "5:17 PM",
+      "sku": "print-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #1 (Venmo)"
+    },
+    {
+      "id": "evsalfzm",
+      "date": "2026-05-27",
+      "time": "5:57 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #2 (Cash) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "xi2zyh9s",
+      "date": "2026-05-27",
+      "time": "5:59 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #3 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "a3rlovhm",
+      "date": "2026-05-28",
+      "time": "6:19 PM",
+      "sku": "print-8x10",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #4 (Cash)"
+    },
+    {
+      "id": "9ofv6vty",
+      "date": "2026-05-28",
+      "time": "6:20 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -4,
+      "reason": "Sale #5 (Card) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "snjp5eeb",
+      "date": "2026-05-28",
+      "time": "6:47 PM",
+      "sku": "magnet",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #6 (Cash)"
+    },
+    {
+      "id": "sk0h3nzh",
+      "date": "2026-05-28",
+      "time": "6:47 PM",
+      "sku": "u-paint",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #6 (Cash)"
+    },
+    {
+      "id": "1j3x38dx",
+      "date": "2026-05-28",
+      "time": "6:47 PM",
+      "sku": "u-paint",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #7 (Card)"
+    },
+    {
+      "id": "mdzaku6e",
+      "date": "2026-05-28",
+      "time": "7:11 PM",
+      "sku": "print-8x10",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #8 (Venmo)"
+    },
+    {
+      "id": "er9ke7uc",
+      "date": "2026-05-28",
+      "time": "7:31 PM",
+      "sku": "print-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #9 (Venmo)"
+    },
+    {
+      "id": "2ucwmzt5",
+      "date": "2026-05-28",
+      "time": "7:37 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #10 (Venmo)"
+    },
+    {
+      "id": "0144paa4",
+      "date": "2026-05-28",
+      "time": "8:31 PM",
+      "sku": "card-mini-pack",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #11 (Cash)"
+    },
+    {
+      "id": "tzmd0jzk",
+      "date": "2026-05-28",
+      "time": "8:35 PM",
+      "sku": "u-paint",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #12 (Venmo)"
+    },
+    {
+      "id": "xu6tggpg",
+      "date": "2026-05-28",
+      "time": "8:39 PM",
+      "sku": "orig-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #13 (Venmo)"
+    },
+    {
+      "id": "q5rndloy",
+      "date": "2026-05-28",
+      "time": "9:04 PM",
+      "sku": "book-the-orders",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #14 (Card)"
+    },
+    {
+      "id": "sll936cx",
+      "date": "2026-05-28",
+      "time": "9:05 PM",
+      "sku": "card-folded",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #15 (Cash)"
+    },
+    {
+      "id": "esl135yi",
+      "date": "2026-07-03",
+      "time": "11:18 AM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #1 (Cash) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "zm1sfvt9",
+      "date": "2026-07-03",
+      "time": "12:19 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -3,
+      "reason": "Sale #2 (Venmo)"
+    },
+    {
+      "id": "l5gqpgnx",
+      "date": "2026-07-03",
+      "time": "12:19 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #3 (Cash)"
+    },
+    {
+      "id": "8eftt8ce",
+      "date": "2026-07-03",
+      "time": "12:32 PM",
+      "sku": "journal-a5",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #4 (Venmo)"
+    },
+    {
+      "id": "widlca65",
+      "date": "2026-07-03",
+      "time": "12:32 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #4 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "0s572pkk",
+      "date": "2026-07-03",
+      "time": "1:00 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #5 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "wwm4hxie",
+      "date": "2026-07-03",
+      "time": "1:00 PM",
+      "sku": "book-the-orders",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #5 (Venmo)"
+    },
+    {
+      "id": "8ux6lwc1",
+      "date": "2026-07-03",
+      "time": "1:42 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #6 (Cash)"
+    },
+    {
+      "id": "rgumpumx",
+      "date": "2026-07-03",
+      "time": "1:42 PM",
+      "sku": "card-mini-pack",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #6 (Cash)"
+    },
+    {
+      "id": "v0bx5qyd",
+      "date": "2026-07-03",
+      "time": "1:42 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #7 (Cash)"
+    },
+    {
+      "id": "jbj4il8m",
+      "date": "2026-07-03",
+      "time": "2:54 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #8 (Card)"
+    },
+    {
+      "id": "qpetibbd",
+      "date": "2026-07-03",
+      "time": "5:03 PM",
+      "sku": "book-the-orders",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #9 (Card)"
+    },
+    {
+      "id": "jiykawi1",
+      "date": "2026-07-03",
+      "time": "5:03 PM",
+      "sku": "orig-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #10 (Card)"
+    },
+    {
+      "id": "qlk2hp3q",
+      "date": "2026-07-03",
+      "time": "5:03 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #10 (Card)"
+    },
+    {
+      "id": "a56msqos",
+      "date": "2026-07-03",
+      "time": "5:47 PM",
+      "sku": "print-11x14p",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #11 (Card)"
+    },
+    {
+      "id": "ukt36ql8",
+      "date": "2026-07-04",
+      "time": "11:23 AM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #12 (Venmo)"
+    },
+    {
+      "id": "kbo38slj",
+      "date": "2026-07-04",
+      "time": "11:23 AM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #13 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "6k1nm8uc",
+      "date": "2026-07-04",
+      "time": "11:42 AM",
+      "sku": "book-the-orders",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #14 (Venmo)"
+    },
+    {
+      "id": "a8s15yfk",
+      "date": "2026-07-04",
+      "time": "12:32 PM",
+      "sku": "card-mini-pack",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #15 (Venmo)"
+    },
+    {
+      "id": "hqmy2w32",
+      "date": "2026-07-04",
+      "time": "12:34 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #16 (Card)"
+    },
+    {
+      "id": "n08ttw96",
+      "date": "2026-07-04",
+      "time": "12:43 PM",
+      "sku": "print-8x10",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #17 (Venmo)"
+    },
+    {
+      "id": "z8mnfu2j",
+      "date": "2026-07-04",
+      "time": "12:43 PM",
+      "sku": "orig-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #18 (Venmo)"
+    },
+    {
+      "id": "isdssqga",
+      "date": "2026-07-04",
+      "time": "1:40 PM",
+      "sku": "book-the-orders",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #19 (Card)"
+    },
+    {
+      "id": "9u3xppsz",
+      "date": "2026-07-04",
+      "time": "1:40 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #19 (Card) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "asnxxev8",
+      "date": "2026-07-04",
+      "time": "1:41 PM",
+      "sku": "print-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #20 (Cash)"
+    },
+    {
+      "id": "hmj95z4e",
+      "date": "2026-07-04",
+      "time": "5:05 PM",
+      "sku": "sticker",
+      "type": "Sale",
+      "qtyChange": -2,
+      "reason": "Sale #21 (Venmo) [Stickers 2 for $5 bundle, -2/sale]"
+    },
+    {
+      "id": "5t6glaos",
+      "date": "2026-07-04",
+      "time": "5:06 PM",
+      "sku": "orig-5x7",
+      "type": "Manual Adjust",
+      "qtyChange": 20,
+      "reason": "On Hand 0 → 20"
+    },
+    {
+      "id": "x7t7ptg2",
+      "date": "2026-07-04",
+      "time": "5:06 PM",
+      "sku": "orig-4x6",
+      "type": "Manual Adjust",
+      "qtyChange": 20,
+      "reason": "On Hand 0 → 20"
+    },
+    {
+      "id": "eevga7qi",
+      "date": "2026-07-04",
+      "time": "5:29 PM",
+      "sku": "orig-4x6",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #22 (Venmo)"
+    },
+    {
+      "id": "kz0zdr1r",
+      "date": "2026-07-05",
+      "time": "6:00 PM",
+      "sku": "orig-5x7",
+      "type": "Sale",
+      "qtyChange": -1,
+      "reason": "Sale #23 (Venmo)"
+    }
+  ],
   "sales": []
 }
